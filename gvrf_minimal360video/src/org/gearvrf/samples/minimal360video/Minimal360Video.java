@@ -53,7 +53,7 @@ public class Minimal360Video extends GVRScript
         MediaPlayer mediaPlayer = new MediaPlayer();
         AssetFileDescriptor afd;
         try {
-            afd = gvrContext.getContext().getAssets().openFd("videos_s_3.mp4");
+            afd = gvrContext.getContext().getAssets().openFd("RicohTheta_BurlingameAve_er_edit.mp4");
             android.util.Log.d("Minimal360Video", "Assets was found.");
             mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
             android.util.Log.d("Minimal360Video", "DataSource was set.");
@@ -70,11 +70,14 @@ public class Minimal360Video extends GVRScript
         mediaPlayer.start();
 
         // create video scene
-        GVRVideoSceneObject video = new GVRVideoSceneObject( gvrContext, mesh, mediaPlayer, GVRVideoType.MONO );
+        //GVRVideoSceneObject video = new GVRVideoSceneObject( gvrContext, mesh, mediaPlayer, GVRVideoType.MONO );
+        GVRVideoSceneObject video = new GVRVideoSceneObject( gvrContext, 8.0f, 4.0f, mediaPlayer, GVRVideoType.MONO );
         video.setName( "video" );
+        video.getTransform().setPosition(0.0f, 0.0f, -4.0f);
 
         // apply video to scene
-        scene.addSceneObject( video );
+        //scene.addSceneObject( video );
+        scene.getMainCameraRig().addChildObject(video);
     }
 
     @Override
