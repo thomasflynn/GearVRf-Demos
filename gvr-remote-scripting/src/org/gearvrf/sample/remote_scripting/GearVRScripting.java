@@ -21,6 +21,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import org.gearvrf.GVRActivity;
 import android.net.wifi.WifiManager;
+import java.util.UUID;
 import java.nio.ByteOrder;
 import java.lang.Integer;
 import java.math.BigInteger;
@@ -74,7 +75,13 @@ public class GearVRScripting extends GVRActivity implements OnTouchPadGestureLis
     {
         super.onCreate(savedInstanceState);
 
+        mDetector = new VRTouchPadGestureDetector(this);
+        this.takeKeyEvents(true);
+
         ipAddress = getWifiIpAddress(this);
+
+        createWebView();
+        loadUrl(homeUrl);
 
         mScript = new GearVRScriptingManager();
         setScript(mScript, "gvr.xml");
@@ -282,7 +289,6 @@ public class GearVRScripting extends GVRActivity implements OnTouchPadGestureLis
             mContext = c;
         }
 
-        /*
         // Can replace all methods with this to avoid duplication in Activity & Script?
         // need to get all arguments... reflection or varargs or JS can encode
         @JavascriptInterface
@@ -373,8 +379,6 @@ public class GearVRScripting extends GVRActivity implements OnTouchPadGestureLis
         public void removeObjectFromScene(String scene, String object) {
             mScript.removeObjectFromScene(scene, object);
         }
-        */
     }
-
 
 }
