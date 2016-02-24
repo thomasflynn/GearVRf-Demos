@@ -15,24 +15,76 @@
 
 package org.gearvrf.sample.remote_scripting;
 
+import java.io.IOException;
 import android.app.Activity;
 import android.os.Bundle;
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRScript;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
+import org.gearvrf.GVRBaseSensor;
+import org.gearvrf.GVRTexture;
 import org.gearvrf.scene_objects.GVRTextViewSceneObject;
+import org.gearvrf.scene_objects.view.GVRFrameLayout;
+import org.gearvrf.scene_objects.GVRViewSceneObject;
+import org.gearvrf.scene_objects.GVRSphereSceneObject;
 import android.view.Gravity;
+import android.graphics.Point;
+import android.os.Handler;
+import android.os.Message;
+import android.view.Display;
+import android.view.InputDevice;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.view.MotionEvent.PointerCoords;
+import android.view.MotionEvent.PointerProperties;
+import java.util.concurrent.Future;
+
 
 public class GearVRScriptingManager extends GVRScript
 {
+    private GVRContext mGVRContext;
+    private GearVRScripting activity;
+    private final GVRFrameLayout frameLayout;
+    private Handler mainThreadHandler;
+    private GVRViewSceneObject layoutSceneObject;
+    private GVRSphereSceneObject sphereSceneObject;
+
+    private int frameWidth;
+    private int frameHeight;
+
+    private static final float QUAD_X = 1.0f;
+    private static final float QUAD_Y = 1.0f;
+    private static final float HALF_QUAD_X = QUAD_X / 2.0f;
+    private static final float HALF_QUAD_Y = QUAD_Y / 2.0f;
+    private static final float DEPTH = -1.5f;
+
+    public GearVRScriptingManager(GearVRScripting scriptingActivity) {
+        activity = scriptingActivity;
+        frameLayout = activity.getFrameLayout();
+
+        mainThreadHandler = new Handler(activity.getMainLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                // dispatch motion event
+                MotionEvent motionEvent = (MotionEvent) msg.obj;
+                frameLayout.dispatchTouchEvent(motionEvent);
+                frameLayout.invalidate();
+                motionEvent.recycle();
+            }
+        };
+    }
+
     @Override
     public void onInit(GVRContext gvrContext) {
         gvrContext.startDebugServer();
+        mGVRContext = gvrContext;
         GVRScene scene = gvrContext.getNextMainScene();
 
         // get the ip address
-        GearVRScripting activity = (GearVRScripting) gvrContext.getActivity();
         String ipAddress = activity.getIpAddress();
         String telnetString = "telnet " + ipAddress + " 1645";
 
@@ -47,6 +99,40 @@ public class GearVRScriptingManager extends GVRScript
 
         // add it to the scene
         scene.addSceneObject(textViewSceneObject);
+
+        // setup layout object
+        layoutSceneObject = new GVRViewSceneObject(gvrContext, frameLayout, gvrContext.createQuad(QUAD_X, QUAD_Y));
+        layoutSceneObject.getTransform().setPosition(0.0f, 0.0f, DEPTH);
+        //scene.addSceneObject(layoutSceneObject);
+   
+        // setup sensor
+        GearVRSensor gvrsensor = new GearVRSensor(gvrContext, (Handler)mainThreadHandler);
+        GVRBaseSensor sensor = gvrsensor.getSensor();
+        layoutSceneObject.setSensor(sensor);
+
+        // setup background sphere
+        try {
+            Future<GVRTexture> background = mGVRContext.loadFutureTexture(new GVRAndroidResource(mGVRContext, "background1.jpg"));
+            sphereSceneObject = new GVRSphereSceneObject(gvrContext, false, background);
+            sphereSceneObject.getTransform().setScale(6.0f, 6.0f, 6.0f);
+            //scene.addSceneObject(sphereSceneObject);
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setNewBackground(final String filename) {
+        mGVRContext.runOnGlThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Future<GVRTexture> background = mGVRContext.loadFutureTexture(new GVRAndroidResource(mGVRContext, filename));
+                        sphereSceneObject.getRenderData().getMaterial().setMainTexture(background);
+                    } catch(IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
     }
 
     @Override

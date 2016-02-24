@@ -25,11 +25,14 @@ import java.lang.Integer;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import org.gearvrf.scene_objects.view.GVRFrameLayout;
 
 public class GearVRScripting extends GVRActivity
 {
     private final String TAG = "GearVRScripting";
-    String ipAddress;
+    private String ipAddress;
+    private GearVRAndroidUI androidUI;
+    private GearVRScriptingManager manager;
 
     /** Called when the activity is first created. */
     @Override
@@ -39,7 +42,19 @@ public class GearVRScripting extends GVRActivity
 
         ipAddress = getWifiIpAddress(this);
 
-        setScript(new GearVRScriptingManager(), "gvr.xml");
+        androidUI = new GearVRAndroidUI(this);
+
+        manager = new GearVRScriptingManager(this);
+
+        setScript(manager, "gvr.xml");
+    }
+
+    public GVRFrameLayout getFrameLayout() {
+        return androidUI.getFrameLayout();
+    }
+
+    public void setNewBackground(String filename) {
+        manager.setNewBackground(filename);
     }
 
     /* 
