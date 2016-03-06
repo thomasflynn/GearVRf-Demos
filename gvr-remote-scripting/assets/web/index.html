@@ -1,0 +1,316 @@
+<!doctype html>
+<html>
+<head lang="en">
+  <meta charset="utf-8">
+
+  <!-- set the environment background -->
+  <meta name="vr-background" content="#ff0000,#0000ff">
+
+  <title>navigator test suite &amp; demos</title>
+<link href="http://fonts.googleapis.com/css?family=Nunito:300,400,500,700" rel="stylesheet">
+<style>
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+body {
+  font-family: Nunito, sans-serif;
+  width: 1024px;
+  height: 1024px;
+  margin: 0px;
+  padding: 20px;
+  outline: 1px solid black;
+  font-weight: 300;
+}
+h1,h2,h3,h4,h5,h6 {
+  font-weight: 300;
+}
+h1 {
+  font-size: 84px;
+  line-height: 84px;
+  margin: 0px;
+}
+h3 {
+  font-size: 40px;
+  line-height: 48px;
+  margin: 0px;
+}
+h4 {
+  font-size: 28px;
+  line-height: 34px;
+  margin: 0px;
+  margin-bottom: 8px;
+}
+
+p {
+  font-size: 24px;
+  margin: 0px;
+}
+
+input[type=button] {
+  font-size: 34px;
+  font-weight: 300;
+  border: none;
+  padding: 12px 50px;
+  margin: 6px auto;
+  display: block;
+  border-radius: 35px;
+  font-family: Nunito;
+}
+
+input[type=button]:hover {
+  cursor: pointer;
+}
+
+.section {
+  margin-bottom: 30px;
+}
+
+.header {
+  margin-bottom: 10px;
+}
+.bg {
+  width: 200px;
+  height: 200px;
+  margin-right: 10px;
+  float: left;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-size: 32px;
+}
+
+#color-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin-bottom: 6px;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+#color-table:hover {
+  cursor: pointer;
+}
+td.color_box {
+  color: transparent;
+  font-size: 8px;
+  height: 120px;
+  overflow: hidden;
+
+}
+td.color_box:hover {
+  cursor: pointer;
+}
+
+.note {
+  font-size: 18px;
+  text-align: right;
+}
+
+#gradients {
+  display: flex;
+  flex-direction: row;
+
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#gradients > div {
+  flex-grow: 1;
+  outline: 0px solid black;
+  text-align: center;
+  height: 150px;
+  color: transparent;
+  font-size: 8px;
+}
+
+#gradients .vr-bg-gradient {
+  cursor: pointer;
+}
+
+#textarea {
+  width: 100%;
+  height: 136px;
+  font-family: Nunito, sans-serif;
+  font-size: 42px;
+  font-weight: 300;
+  border: 5px solid black;
+  padding: 10px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="header section">
+  <h1>navigator</h1>
+  <h3>test suite &amp; demos</h3>
+</div>
+
+<div class="section">
+  <h4>background colors</h4>
+  <table id="color-table">
+  <tr>
+    <td title="Red" class="vr-bg-color color_box" style="background: #f44336" data-rgb="rgb(244,67,54)"> Red </td>
+    <td title="Pink" class="vr-bg-color color_box" style="background: #E91E63" data-rgb="rgb(233,30,99)"> Pink </td>
+    <td title="Purple" class="vr-bg-color color_box" style="background: #9C27B0" data-rgb="rgb(156,39,176)"> Purple </td>
+    <td title="Deep Purple" class="vr-bg-color color_box" style="background: #673AB7" data-rgb="rgb(103,58,183)"> Deep Purple </td>
+    <td title="Indigo" class="vr-bg-color color_box" style="background: #3F51B5" data-rgb="rgb(63,81,181)"> Indigo </td>
+    <td title="Blue" class="vr-bg-color color_box" style="background: #2196F3" data-rgb="rgb(33,150,243)"> Blue </td>
+    <td title="Light Blue" class="vr-bg-color color_box" style="background: #03A9F4" data-rgb="rgb(3,169,244)"> Light Blue </td>
+    <td title="Cyan" class="vr-bg-color color_box" style="background: #00BCD4" data-rgb="rgb(0,188,212)"> Cyan </td>
+    <td title="Teal" class="vr-bg-color color_box" style="background: #009688" data-rgb="rgb(0,150,136)"> Teal </td>
+    <td title="Green" class="vr-bg-color color_box" style="background: #4CAF50" data-rgb="rgb(76,175,80)"> Green </td>
+    <td title="Light Green" class="vr-bg-color color_box" style="background: #8BC34A" data-rgb="rgb(139,195,74)"> Light Green </td>
+    <td title="Lime" class="vr-bg-color color_box" style="background: #CDDC39" data-rgb="rgb(205,220,57)"> Lime </td>
+    <td title="Yellow" class="vr-bg-color color_box" style="background: #FFEB3B" data-rgb="rgb(255,235,59)"> Yellow </td>
+    <td title="Amber" class="vr-bg-color color_box" style="background: #FFC107" data-rgb="rgb(255,193,7)"> Amber </td>
+    <td title="Orange" class="vr-bg-color color_box" style="background: #FF9800" data-rgb="rgb(255,152,0)"> Orange </td>
+    <td title="Deep Orange" class="vr-bg-color color_box" style="background: #FF5722" data-rgb="rgb(255,87,34)"> Deep Orange </td>
+    <td title="Brown" class="vr-bg-color color_box" style="background: #795548" data-rgb="rgb(121,85,72)"> Brown </td>
+    <td title="Grey" class="vr-bg-color color_box" style="background: #9E9E9E" data-rgb="rgb(158,158,158)"> Grey </td>
+    <td title="Blue Grey" class="vr-bg-color color_box" style="background: #607D8B" data-rgb="rgb(96,125,139)"> Blue Grey </td>
+    <td title="White" class="vr-bg-color color_box" style="background: #FFFFFF" data-rgb="rgb(255,255,255)"> White </td>
+    <td title="Black" class="vr-bg-color color_box" style="background: #000000" data-rgb="rgb(0,0,0)"> Black </td>
+  </tr>
+  </table>
+  <div class="note">google material design palette</div>
+</div>
+
+<div class="section">
+  <h4>background gradients</h4>
+  <div id="gradients">
+    <div class="vr-bg-gradient" style="background: linear-gradient(to bottom, #ff0000,#0000ff)" data-bg="#ff0000,#0000ff">1</div>
+    <div class="vr-bg-gradient" style="background: linear-gradient(to bottom, #0000ff,#ff0000)" data-bg="#0000ff,#ff0000">2</div>
+    <div class="vr-bg-gradient" style="background: linear-gradient(to bottom, #3366ff,#ff0099)" data-bg="#3366ff,#ff0099">3</div>
+    <div class="vr-bg-gradient" style="background: linear-gradient(to bottom, #0000ff,#00cc00)" data-bg="#0000ff,#00cc00">4</div>
+    <div class="vr-bg-gradient" style="background: linear-gradient(to bottom, #000000,#000000,#0000ff)" data-bg="#000000,#000000,#0000ff">5</div>
+    <div class="vr-bg-gradient" style="background: linear-gradient(to bottom, #ffffff,#ffffff,#ffffff,#666666,#666666,#666666)" data-bg="#ffffff,#ffffff,#ffffff,#666666,#666666,#666666">6</div>
+  </div>
+</div>
+
+<div class="section">
+  <input type="button" value="start" id="start-earth-btn" style="float: right">
+  <h4>earth globe app</h4>
+  <p>a basic revolving earth globe app. press start</p>
+</div>
+
+<div class="section">
+  <h4>the future, arriving soon</h4>
+  <p>video (2D &amp; 360) integration, UI/object interaction, responsive design
+  <input type="button" value="WebVR" id="launch-webvr-btn" style="float: right">
+  </p>
+</div>
+
+<div class="section">
+  <h4>text entry</h4>
+  <textarea id="textarea">try swiping up/down on touchpad to enable ambient camera</textarea>
+</div>
+
+<script src="navi.js"></script>
+<script>
+
+
+document.addEventListener('click', function(event) {
+  //NAVI.showToast('clicked pg @ '+ event.pageX +','+ event.pageY);
+}, false);
+
+document.addEventListener('keydown', function(event) {
+  var code = event.keyCode || event.which;
+  //NAVI.showToast('keydown ' + code);
+});
+
+
+// colors
+var bgButtons = document.getElementsByClassName('vr-bg-color');
+
+for (var i = 0; i < bgButtons.length; i++) {
+  bgButtons[i].addEventListener('click', function(event){
+    var color = event.target.style.backgroundColor;
+    NAVI.setBackground( color );
+    event.stopPropagation();
+  });
+}
+
+
+// gradients
+var gradientButtons = document.getElementsByClassName('vr-bg-gradient');
+
+for (var i = 0; i < gradientButtons.length; i++) {
+  gradientButtons[i].addEventListener('click', function(event){
+    var grad = event.target.dataset.bg;
+    NAVI.setBackground( grad );
+    event.stopPropagation();
+  });
+}
+
+// webvr launching
+var url = 'http://107.170.0.198/webvr/public/launcher.html';
+
+var webvrButton = document.getElementById('launch-webvr-btn');
+webvrButton.addEventListener('click', function(event){
+  NAVI.launchWebVR( url );
+});
+
+// earth globe
+var frame = 0;
+var time = Date.now();
+var dt = 0;
+
+var scene = new NAVI.Scene('main');
+
+var earth;
+
+var appButton = document.getElementById('start-earth-btn');
+
+var started = false;
+appButton.addEventListener('click', function(event){
+  if (started) return;
+  started = true;
+
+  console.log('starting earth globe app...');
+
+  earth = new NAVI.Sphere('earth');
+
+  setTimeout(function(){
+    // temp: need delay
+    scene.add(earth);
+
+    step();
+
+  }, 2*1000);
+
+});
+
+var angle = 0.0;
+var axis = [0,1,0];
+
+var radius = 5;
+var x = 0;
+var y = 0;
+function step() {
+  requestAnimationFrame(step);
+
+  if (frame++ % 2) // 30fps
+    return;
+
+  earth.rotate(angle, axis[0], axis[1], axis[2]);
+  angle += 0.5;
+
+  // revolution
+  earth.setPosition(x, 0, y);
+  x = Math.cos(frame/60) * radius;
+  y = Math.sin(frame/60) * radius;
+
+
+  dt = Date.now() - time;
+  time = Date.now();
+}
+
+</script>
+
+</body>
+</html>

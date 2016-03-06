@@ -32,8 +32,8 @@
         useSrgbFramebuffer="false" >
 
         <mono-mode-parms
-            monoFullScreen="true"
-            monoMode="true" />
+            monoFullScreen="false"
+            monoMode="false" />
 
         <mode-parms
             allowPowerSave="true"
@@ -46,8 +46,8 @@
         <eye-buffer-parms
             colorFormat="COLOR_8888"
             depthFormat="DEPTH_24"
-            fov-y="60.0"
-            multiSamples="2"
+            fov-y="90.0"
+            multiSamples="4"
             resolutionWidth="DEFAULT"
             resolutionHeight="DEFAULT"
             resolveDepth="false" />
