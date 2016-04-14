@@ -50,6 +50,7 @@ public class GearVRScriptingManager extends GVRScript
         // Add display utils for scripts
         GVRScriptManager scriptManager = gvrContext.getScriptManager();
         scriptManager.addVariable("display", new DisplayUtils(gvrContext));
+        scriptManager.addVariable("cursor", new CursorUtils(gvrContext));
     }
 
     @Override
