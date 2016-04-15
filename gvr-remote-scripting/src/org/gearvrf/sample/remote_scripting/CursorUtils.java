@@ -18,11 +18,13 @@ package org.gearvrf.sample.remote_scripting;
 import java.lang.Runnable;
 import java.util.concurrent.Future;
 import java.io.IOException;
+import org.gearvrf.FutureWrapper;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMesh;
 import org.gearvrf.io.CursorControllerListener;
 import org.gearvrf.io.GVRCursorType;
 import org.gearvrf.io.GVRInputManager;
@@ -32,7 +34,7 @@ import org.gearvrf.GVRRenderData;
 
 public class CursorUtils {
     private GVRContext gvrContext;
-    private CustomShaderManager shaderManager;
+    private GVRSceneObject cursor;
 
     public CursorUtils(GVRContext context) {
         gvrContext = context;
@@ -58,7 +60,7 @@ public class CursorUtils {
                 public void run() {
                     // set up the input manager for the main scene
                     GVRInputManager inputManager = gvrContext.getInputManager();
-                    inputManager.addCursorControllerListener(listener);
+                    inputManager.removeCursorControllerListener(listener);
                     for (GVRCursorController cursor : inputManager.getCursorControllers()) {
                         listener.onCursorControllerRemoved(cursor);
                     }
@@ -73,6 +75,7 @@ public class CursorUtils {
             if (controller.getCursorType() == GVRCursorType.GAZE) {
                 controller.resetSceneObject();
                 controller.setEnable(false);
+                gvrContext.getMainScene().getMainCameraRig().removeChildObject(cursor);
             }
         }
 
@@ -82,22 +85,17 @@ public class CursorUtils {
 
             // Only allow only gaze
             if (controller.getCursorType() == GVRCursorType.GAZE) {
-                if(shaderManager == null) {
-                    shaderManager = new CustomShaderManager(gvrContext);
-                }
-                GVRSceneObject cursor = new GVRSphereSceneObject(gvrContext);
-                GVRRenderData cursorRenderData = cursor.getRenderData();
-                GVRMaterial material = cursorRenderData.getMaterial();
-                material.setShaderType(shaderManager.getShaderId());
-                material.setVec4(CustomShaderManager.COLOR_KEY, 1.0f, 0.0f, 0.0f, 0.5f);
-                gvrContext.getMainScene().addSceneObject(cursor);
+                cursor = new GVRSceneObject(gvrContext, 
+                        new FutureWrapper<GVRMesh>(gvrContext.createQuad(0.1f, 0.1f)),
+                        gvrContext.loadFutureTexture(new GVRAndroidResource(gvrContext, R.raw.cursor)));
+                cursor.setName("cursor");
+                cursor.getTransform().setPosition(0.0f, 0.0f, DEPTH);
+                gvrContext.getMainScene().getMainCameraRig().addChildObject(cursor);
                 cursor.getRenderData().setDepthTest(false);
                 cursor.getRenderData().setRenderingOrder(100000);
-                controller.setSceneObject(cursor);
                 controller.setPosition(0.0f, 0.0f, DEPTH);
                 controller.setNearDepth(DEPTH);
                 controller.setFarDepth(DEPTH);
-                cursor.getTransform().setScale(-0.015f, -0.015f, -0.015f);
             } else {
                 // disable all other types
                 controller.setEnable(false);
