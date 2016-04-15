@@ -1,13 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     >
-<TextView
+    <RelativeLayout
+    android:orientation="vertical"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:text="Hello World, GearVRScripting"
-    />
-</LinearLayout>
+    android:layout_height="fill_parent"
+    >
+        <EditText
+            android:id="@+id/editor"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:lines="12"
+            android:text="importPackage(org.gearvrf);\nimportPackage(org.gearvrf.scene_objects);\n\nvar scene = gvrf.getMainScene();\n"
+            />
+        <TextView
+            android:id="@+id/update"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Update"
+            android:background="#005000"
+            android:padding="10dp"
+            android:layout_below="@id/editor"
+            />
+    </RelativeLayout>
+</FrameLayout>
 
