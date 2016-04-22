@@ -23,9 +23,19 @@ import org.gearvrf.scene_objects.view.GVRFrameLayout;
 import org.gearvrf.GVRBaseSensor;
 import org.gearvrf.SensorEvent;
 import org.gearvrf.ISensorEvents;
-import java.lang.Runnable;
 
+import org.gearvrf.GVRContext;
+import org.gearvrf.debug.cli.LineProcessor;
+import org.gearvrf.script.GVRScriptManager;
+
+import java.io.StringWriter;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
+
+import java.lang.Runnable;
 import android.graphics.Point;
+import android.graphics.Color;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
@@ -56,11 +66,12 @@ public class EditorUtils {
     private final static PointerCoords pointerCoords;
     private static final int KEY_EVENT = 1;
 
-    private static final float QUAD_X = 1.0f;
+    private static final float QUAD_X = 2.0f;
     private static final float QUAD_Y = 1.0f;
     private static final float HALF_QUAD_X = QUAD_X / 2.0f;
     private static final float HALF_QUAD_Y = QUAD_Y / 2.0f;
     private static final float DEPTH = -1.5f;
+    private ScriptHandler mScriptHandler;
 
     private TextView updateButton;
 
@@ -79,6 +90,7 @@ public class EditorUtils {
     }
 
     public void inflate() {
+        mScriptHandler = new ScriptHandler(gvrContext);
         frameLayout = new GVRFrameLayout(activity);
         frameLayout.setDrawingCacheEnabled(false);
         View.inflate(activity, R.layout.main, frameLayout);
@@ -86,6 +98,7 @@ public class EditorUtils {
         final EditText editor = (EditText) frameLayout.findViewById(R.id.editor);
         editor.requestFocus();
         editor.setDrawingCacheEnabled(false);
+        editor.setBackgroundColor(Color.BLACK);
         editor.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -110,27 +123,25 @@ public class EditorUtils {
                 public void onClick(View view) {
                     android.util.Log.d("Editor", "update was clicked");
                     // get text
+                    String script = editor.getText().toString();
                     // execute script
+                    mScriptHandler.processLine(script);
                 }
             });
 
         mainThreadHandler = new Handler(activity.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                if (msg.what == KEY_EVENT) {
-                    KeyEvent keyEvent = (KeyEvent) msg.obj;
-                    frameLayout.dispatchKeyEvent(keyEvent);
-                    frameLayout.invalidate();
-                    frameLayout.requestLayout();
-                    android.util.Log.d("Editor", "key: " + keyEvent);
-                } else {
-                    // dispatch motion event
-                    MotionEvent motionEvent = (MotionEvent) msg.obj;
-                    frameLayout.dispatchTouchEvent(motionEvent);
-                    frameLayout.invalidate();
-                    frameLayout.requestLayout();
-                    motionEvent.recycle();
-                }
+                float x = updateButton.getX();
+                float y = updateButton.getY();
+                float w = updateButton.getWidth();
+                float h = updateButton.getHeight();
+
+                MotionEvent motionEvent = (MotionEvent) msg.obj;
+                frameLayout.dispatchTouchEvent(motionEvent);
+                frameLayout.invalidate();
+                frameLayout.requestLayout();
+                motionEvent.recycle();
             }
         };
 
@@ -158,7 +169,9 @@ public class EditorUtils {
 
         layoutSceneObject = new GVRViewSceneObject(gvrContext, frameLayout, gvrContext.createQuad(QUAD_X, QUAD_Y));
 
-        layoutSceneObject.getTransform().setPosition(0.0f, 0.0f, DEPTH);
+        layoutSceneObject.getTransform().setPosition(2.0f, 0.0f, -2.0f);
+        layoutSceneObject.getTransform().setRotationByAxis(-45.0f, 0.0f, 1.0f, 0.0f);
+        layoutSceneObject.setName("editor");
 
         frameWidth = frameLayout.getWidth();
         frameHeight = frameLayout.getHeight();
@@ -175,27 +188,97 @@ public class EditorUtils {
     }
 
     private ISensorEvents sensorEvents = new ISensorEvents() {
+        private static final float SCALE = 1.0f;
+        private float savedMotionEventX, savedMotionEventY, savedHitPointX, savedHitPointY;
         @Override
         public void onSensorEvent(final SensorEvent event) {
-            final int action;
-            final KeyEvent keyEvent = event.getCursorController().getKeyEvent();
-            if (keyEvent == null) {
-                return;
-            }
+            final MotionEvent motionEvent = event.getCursorController().getMotionEvent();
+            if (motionEvent != null && motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
+                pointerCoords.x = savedHitPointX + ((motionEvent.getX() - savedMotionEventX) * SCALE);
+                pointerCoords.y = savedHitPointY + ((motionEvent.getY() - savedMotionEventY) * SCALE);
 
-            action = keyEvent.getAction();
-            float[] hitPoint = event.getHitPoint();
-            float x = (hitPoint[0] + HALF_QUAD_X) / QUAD_X;
-            float y = -(hitPoint[1] + HALF_QUAD_Y) / QUAD_Y;
-            pointerCoords.x = x * frameWidth;
-            pointerCoords.y = y * frameHeight;
-            long now = SystemClock.uptimeMillis();
-            final MotionEvent clone = MotionEvent.obtain(now, now+1, action, 1, pointerProperties, pointerCoordsArray, 0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
-            Message message = Message.obtain(mainThreadHandler, 0, 0, 0, clone);
-            mainThreadHandler.sendMessage(message);
+                final MotionEvent clone = MotionEvent.obtain(
+                        motionEvent.getDownTime(), motionEvent.getEventTime(),
+                        motionEvent.getAction(), 1, pointerProperties,
+                        pointerCoordsArray, 0, 0, 1f, 1f, 0, 0,
+                        InputDevice.SOURCE_TOUCHSCREEN, 0);
+
+                Message message = Message.obtain(mainThreadHandler, 0, 0, 0, clone);
+                mainThreadHandler.sendMessage(message);
+
+            } else {
+                KeyEvent keyEvent = event.getCursorController().getKeyEvent();
+
+                if (keyEvent == null) {
+                    return;
+                }
+
+                float[] hitPoint = event.getHitPoint();
+
+                pointerCoords.x = (hitPoint[0] + HALF_QUAD_X) * frameWidth;
+                pointerCoords.y = -(hitPoint[1] - HALF_QUAD_Y) * frameHeight;
+
+                if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                    if (motionEvent != null) {
+                        // save the co ordinates on down
+                        savedMotionEventX = motionEvent.getX();
+                        savedMotionEventY = motionEvent.getY();
+                    }
+                    savedHitPointX = pointerCoords.x;
+                    savedHitPointY = pointerCoords.y;
+                }
+
+                MotionEvent clone = getMotionEvent(keyEvent.getDownTime(), keyEvent.getAction());
+
+                Message message = Message.obtain(mainThreadHandler, KEY_EVENT, keyEvent.getKeyCode(), 0, clone);
+                mainThreadHandler.sendMessage(message);
+            }
         }
 
+        private MotionEvent getMotionEvent(long time, int action) {
+            MotionEvent event = MotionEvent.obtain(time, time, action, 1,
+                    pointerProperties, pointerCoordsArray, 0, 0, 1f, 1f, 0, 0,
+                    InputDevice.SOURCE_TOUCHSCREEN, 0);
+            return event;
+        }
     };
 
+
+    class ScriptHandler implements LineProcessor {
+        protected String prompt;
+        protected ScriptEngine mScriptEngine;
+        protected ScriptContext mScriptContext;
+        protected StringWriter mWriter;
+
+        public ScriptHandler(GVRContext gvrContext) {
+            prompt = "";
+            mScriptEngine = gvrContext.getScriptManager().getEngine(GVRScriptManager.LANG_JAVASCRIPT);
+            mScriptContext = mScriptEngine.getContext();
+
+            mWriter = new StringWriter();
+            mScriptContext.setWriter(mWriter);
+            mScriptContext.setErrorWriter(mWriter);
+        }
+
+        @Override
+        public String processLine(String line) {
+            try {
+                mWriter.getBuffer().setLength(0);
+                mScriptEngine.eval(line, mScriptContext);
+                mWriter.flush();
+                if (mWriter.getBuffer().length() != 0)
+                    return mWriter.toString();
+                else
+                    return "";
+            } catch (ScriptException e) {
+                return e.toString();
+            }
+        }
+
+        @Override
+        public String getPrompt() {
+            return prompt;
+        }
+    }
 }
 

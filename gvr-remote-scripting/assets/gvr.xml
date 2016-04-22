@@ -30,7 +30,7 @@
         showLoadingIcon="true"
         useProtectedFramebuffer="false"
         useGazeCursorController="true"
-        useSrgbFramebuffer="false" >
+        useSrgbFramebuffer="true" >
 
         <mono-mode-parms
             monoFullScreen="false"
