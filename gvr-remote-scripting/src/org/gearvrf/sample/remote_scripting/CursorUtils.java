@@ -40,7 +40,7 @@ public class CursorUtils {
         gvrContext = context;
     }
 
-    public void enable() {
+    public void show() {
         gvrContext.runOnGlThread(new Runnable() {
                 @Override
                 public void run() {
@@ -54,7 +54,7 @@ public class CursorUtils {
             });
     }
 
-    public void disable() {
+    public void hide() {
         gvrContext.runOnGlThread(new Runnable() {
                 @Override
                 public void run() {
@@ -85,6 +85,14 @@ public class CursorUtils {
 
             // Only allow only gaze
             if (controller.getCursorType() == GVRCursorType.GAZE) {
+                if(cursor != null) {
+                    gvrContext.getMainScene().getMainCameraRig().addChildObject(cursor);
+                    controller.setEnable(true);
+                    controller.setPosition(0.0f, 0.0f, DEPTH);
+                    controller.setNearDepth(DEPTH);
+                    controller.setFarDepth(DEPTH);
+                    return;
+                }
                 cursor = new GVRSceneObject(gvrContext, 
                         new FutureWrapper<GVRMesh>(gvrContext.createQuad(0.1f, 0.1f)),
                         gvrContext.loadFutureTexture(new GVRAndroidResource(gvrContext, R.raw.cursor)));

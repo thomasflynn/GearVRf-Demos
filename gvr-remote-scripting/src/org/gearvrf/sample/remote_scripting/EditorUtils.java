@@ -132,11 +132,6 @@ public class EditorUtils {
         mainThreadHandler = new Handler(activity.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                float x = updateButton.getX();
-                float y = updateButton.getY();
-                float w = updateButton.getWidth();
-                float h = updateButton.getHeight();
-
                 MotionEvent motionEvent = (MotionEvent) msg.obj;
                 frameLayout.dispatchTouchEvent(motionEvent);
                 frameLayout.invalidate();
@@ -169,8 +164,7 @@ public class EditorUtils {
 
         layoutSceneObject = new GVRViewSceneObject(gvrContext, frameLayout, gvrContext.createQuad(QUAD_X, QUAD_Y));
 
-        layoutSceneObject.getTransform().setPosition(2.0f, 0.0f, -2.0f);
-        layoutSceneObject.getTransform().setRotationByAxis(-45.0f, 0.0f, 1.0f, 0.0f);
+        layoutSceneObject.getTransform().setPosition(0.0f, 0.0f, -1.0f);
         layoutSceneObject.setName("editor");
 
         frameWidth = frameLayout.getWidth();
