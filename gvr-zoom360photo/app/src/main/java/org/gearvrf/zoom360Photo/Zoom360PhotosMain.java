@@ -15,6 +15,7 @@
 
 package org.gearvrf.zoom360Photo;
 
+import java.io.IOException;
 import java.util.concurrent.Future;
 
 import org.gearvrf.GVRAndroidResource;
@@ -24,20 +25,26 @@ import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRPerspectiveCamera;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
+import org.gearvrf.utility.Log;
+import org.gearvrf.zoom360Photo.FileBrowserUtils.FileBrowserListener;
+
 import android.view.MotionEvent;
 
-public class Zoom360PhotosMain extends GVRMain {
-
+public class Zoom360PhotosMain extends GVRMain implements FileBrowserListener {
+    private static final String TAG = Zoom360PhotosMain.class.getSimpleName();
     private GVRCameraRig cameraRig;
     private int step = 0;
     private FileBrowserUtils fileBrowser;
     private CursorUtils cursor;
     private boolean isBrowserShowing = false;
+    private GVRContext gvrContext;
+    private boolean turnOnBrowser;
 
     @Override
     public void onInit(GVRContext gvrContext) {
-
+        this.gvrContext = gvrContext;
         // get a handle to the scene
         GVRScene scene = gvrContext.getNextMainScene();
         cameraRig = scene.getMainCameraRig();
@@ -48,30 +55,31 @@ public class Zoom360PhotosMain extends GVRMain {
         Future<GVRTexture> texture = gvrContext.loadFutureTexture(new GVRAndroidResource(gvrContext, R.raw.photosphere));
 
         // create a sphere scene object with the specified texture and triangles facing inward (the 'false' argument) 
-        sphereObject = new GVRSphereSceneObject(gvrContext, false, texture);
+        sphereObject = new GVRSphereSceneObject(gvrContext, 72, 144, false, texture);
         sphereObject.setName("sphere");
         sphereObject.getTransform().setScale(20.0f, 20.0f, 20.0f);
 
         // add the scene object to the scene graph
         scene.addSceneObject(sphereObject);
 
-        fileBrowser = new FileBrowserUtils(gvrContext);
+        fileBrowser = new FileBrowserUtils(gvrContext, this);
         cursor = new CursorUtils(gvrContext);
+        turnOnBrowser = true;
     }
 
     @Override
     public void onStep() {
-        if(!isBrowserShowing) {
+        if(!isBrowserShowing && turnOnBrowser) {
             fileBrowser.show();
             cursor.show();
             isBrowserShowing = true;
+            turnOnBrowser = false;
         } 
     }
 
     public void onTap() {
-        if(!isBrowserShowing) {
-            fileBrowser.show();
-            isBrowserShowing = true;
+        if(!isBrowserShowing && !turnOnBrowser) {
+            turnOnBrowser = true;
         } 
     }
 
@@ -136,5 +144,23 @@ public class Zoom360PhotosMain extends GVRMain {
         }
     }
 
-
+    @Override
+    public void onFileSelected(String filePath) {
+        try {
+            Future<GVRTexture> texture = gvrContext.loadFutureTexture(new GVRAndroidResource(filePath));
+            GVRSceneObject sphere = gvrContext.getMainScene().getSceneObjectByName("sphere");
+            gvrContext.getMainScene().removeSceneObject(sphere);
+            sphere = new GVRSphereSceneObject(gvrContext, 72, 144, false, texture);
+            sphere.setName("sphere");
+            sphere.getTransform().setScale(20, 20, 20);
+            gvrContext.getMainScene().addSceneObject(sphere);
+            fileBrowser.hide();
+            cursor.hide();
+            isBrowserShowing = false;
+            turnOnBrowser = false;
+        } catch(IOException e) {
+            Log.e(TAG, "Could not open file: %s, Error:%s", filePath, e.getMessage());
+        }
+    }
 }
+

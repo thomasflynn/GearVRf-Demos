@@ -34,12 +34,10 @@ public class Zoom360Photos extends GVRActivity
         setMain(main, "gvr.xml");
     }
 
-    /*
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
         main.onTouchEvent(event);
-        return super.onTouchEvent(event);
+        return super.dispatchTouchEvent(event);
     }
-    */
 }
 

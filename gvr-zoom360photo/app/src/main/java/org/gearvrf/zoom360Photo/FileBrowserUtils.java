@@ -70,6 +70,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 public class FileBrowserUtils {
+    private static final String TAG = "Zoom360 FileBrowser";
     private GVRContext gvrContext;
     private boolean inflated = false;
     private GVRViewSceneObject layoutSceneObject;
@@ -82,6 +83,7 @@ public class FileBrowserUtils {
     private final static PointerCoords[] pointerCoordsArray;
     private final static PointerCoords pointerCoords;
     private static final int KEY_EVENT = 1;
+    private static final int MOTION_EVENT = 2;
 
     private static final float QUAD_X = 2.0f;
     private static final float QUAD_Y = 1.0f;
@@ -93,6 +95,12 @@ public class FileBrowserUtils {
     private ListView listView;
     private TextView dirView;
     private ProgressBar spinner;
+    private FileBrowserListener listener;
+    private boolean ignoreOnClick;
+
+    interface FileBrowserListener {
+        void onFileSelected(String filePath);
+    }
 
     static {
         PointerProperties properties = new PointerProperties();
@@ -103,9 +111,10 @@ public class FileBrowserUtils {
         pointerCoordsArray = new PointerCoords[] { pointerCoords };
     }
 
-    public FileBrowserUtils(GVRContext context) {
+    public FileBrowserUtils(GVRContext context, FileBrowserListener fileBrowserListener) {
         gvrContext = context;
         activity = (GVRActivity) context.getActivity();
+        listener = fileBrowserListener;
     }
 
     public void inflate() {
@@ -122,11 +131,14 @@ public class FileBrowserUtils {
         mainThreadHandler = new Handler(activity.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
-                MotionEvent motionEvent = (MotionEvent) msg.obj;
-                frameLayout.dispatchTouchEvent(motionEvent);
-                frameLayout.invalidate();
-                frameLayout.requestLayout();
-                motionEvent.recycle();
+                if(msg.what == MOTION_EVENT) {
+                    MotionEvent motionEvent = (MotionEvent) msg.obj;
+
+                    frameLayout.dispatchTouchEvent(motionEvent);
+                    frameLayout.invalidate();
+                    frameLayout.requestLayout();
+                    motionEvent.recycle();
+                }
             }
         };
 
@@ -149,6 +161,7 @@ public class FileBrowserUtils {
 
         if(layoutSceneObject != null) {
             gvrContext.getMainScene().addSceneObject(layoutSceneObject);
+            ignoreOnClick = true;
             return;
         }
 
@@ -196,9 +209,9 @@ public class FileBrowserUtils {
         }
 
         // only allow model extensions we can read
-        File[] list = dir.listFiles(new FilenameFilter() {
+        final File[] list = dir.listFiles(new FilenameFilter() {
                 public boolean accept(File dir, String name) {
-                    String filename = dir.getName() + File.separator + name;
+                    String filename = dir.getAbsolutePath() + File.separator + name;
                     if(new File(filename).isDirectory()) {
                         return true;
                     }
@@ -234,7 +247,13 @@ public class FileBrowserUtils {
         listView.setOnItemClickListener(new OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    if(ignoreOnClick) {
+                        ignoreOnClick = false;
+                        return;
+                    }
+
                     String filename = (String) listView.getItemAtPosition(position);
+
                     if(filename.endsWith("..")) {
                         // strip out the /..
                         int index = path.lastIndexOf(File.separator);
@@ -249,17 +268,10 @@ public class FileBrowserUtils {
                         chdir(filename);
                     } else if(!filename.isEmpty()) {
                         // strip out /sdcard
-                        filename = filename.substring(8);
+                        //filename = filename.substring(8);
                         spinner.setVisibility(View.VISIBLE);
                         // try to load the image
-                        try {
-                            Future<GVRTexture> texture = gvrContext.loadFutureTexture(new GVRAndroidResource(filename));
-                            GVRSceneObject sphere = gvrContext.getMainScene().getSceneObjectByName("sphere");
-                            sphere.getRenderData().getMaterial().setMainTexture(texture);
-
-                        } catch(IOException e) {
-                            e.printStackTrace();
-                        }
+                        listener.onFileSelected(filename);
                         spinner.setVisibility(View.GONE);
                     }
                 }
@@ -267,59 +279,47 @@ public class FileBrowserUtils {
     }
 
     private ISensorEvents sensorEvents = new ISensorEvents() {
-        private static final float SCALE = 1.0f;
+        private static final float SCALE = 5.0f;
         private float savedMotionEventX, savedMotionEventY, savedHitPointX, savedHitPointY;
         @Override
         public void onSensorEvent(final SensorEvent event) {
-            final MotionEvent motionEvent = event.getCursorController().getMotionEvent();
-            if (motionEvent != null && motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
-                pointerCoords.x = savedHitPointX + ((motionEvent.getX() - savedMotionEventX) * SCALE);
-                pointerCoords.y = savedHitPointY + ((motionEvent.getY() - savedMotionEventY) * SCALE);
 
-                final MotionEvent clone = MotionEvent.obtain(
-                        motionEvent.getDownTime(), motionEvent.getEventTime(),
-                        motionEvent.getAction(), 1, pointerProperties,
-                        pointerCoordsArray, 0, 0, 1f, 1f, 0, 0,
-                        InputDevice.SOURCE_TOUCHSCREEN, 0);
+            List<MotionEvent> motionEvents = event.getCursorController().getMotionEvents();
 
-                Message message = Message.obtain(mainThreadHandler, 0, 0, 0, clone);
-                mainThreadHandler.sendMessage(message);
+            for(MotionEvent motionEvent : motionEvents) {
+                if(motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
+                    pointerCoords.x = savedHitPointX + ((motionEvent.getX() - savedMotionEventX) * SCALE);
+                    pointerCoords.y = savedHitPointY + ((motionEvent.getY() - savedMotionEventY) * SCALE);
+                } else {
+                    float[] hitPoint = event.getHitPoint();
 
-            } else {
-                KeyEvent keyEvent = event.getCursorController().getKeyEvent();
+                    pointerCoords.x = ((hitPoint[0] + HALF_QUAD_X) / QUAD_X) * frameWidth;
+                    pointerCoords.y = (-(hitPoint[1] - HALF_QUAD_Y) / QUAD_Y) * frameHeight;
 
-                if (keyEvent == null) {
-                    return;
-                }
-
-                float[] hitPoint = event.getHitPoint();
-
-                pointerCoords.x = ((hitPoint[0] + HALF_QUAD_X) / QUAD_X) * frameWidth;
-                pointerCoords.y = (-(hitPoint[1] - HALF_QUAD_Y) / QUAD_Y) * frameHeight;
-
-                if (keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
-                    if (motionEvent != null) {
-                        // save the co ordinates on down
+                    if(motionEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                        // save the coordinates on down
                         savedMotionEventX = motionEvent.getX();
                         savedMotionEventY = motionEvent.getY();
+
+                        savedHitPointX = pointerCoords.x;
+                        savedHitPointY = pointerCoords.y;
                     }
-                    savedHitPointX = pointerCoords.x;
-                    savedHitPointY = pointerCoords.y;
                 }
 
-                MotionEvent clone = getMotionEvent(keyEvent.getDownTime(), keyEvent.getAction());
+                final MotionEvent clone = MotionEvent.obtain(
+                        motionEvent.getDownTime(), motionEvent.getEventTime(), motionEvent.getAction(), 1, pointerProperties, pointerCoordsArray, 0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
 
-                Message message = Message.obtain(mainThreadHandler, KEY_EVENT, keyEvent.getKeyCode(), 0, clone);
+                Message message = Message.obtain(mainThreadHandler, MOTION_EVENT, 0, 0, clone);
+                mainThreadHandler.sendMessage(message);
+            }
+
+            List<KeyEvent> keyEvents = event.getCursorController().getKeyEvents();
+            for(KeyEvent keyEvent : keyEvents) {
+                Message message = Message.obtain(mainThreadHandler, KEY_EVENT, keyEvent.getKeyCode(), 0, null);
                 mainThreadHandler.sendMessage(message);
             }
         }
 
-        private MotionEvent getMotionEvent(long time, int action) {
-            MotionEvent event = MotionEvent.obtain(time, time, action, 1,
-                    pointerProperties, pointerCoordsArray, 0, 0, 1f, 1f, 0, 0,
-                    InputDevice.SOURCE_TOUCHSCREEN, 0);
-            return event;
-        }
     };
 
 
