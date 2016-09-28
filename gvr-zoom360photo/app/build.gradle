@@ -1,15 +1,15 @@
 apply plugin: 'com.android.application'
 
+System.setProperty("appName", "gvr-zoom360photo")
+
+if(file("../../common.gradle").exists()) {
+    apply from: '../../common.gradle'
+}
+if(file("../../../../GearVRf-Demos/common.gradle").exists()) {
+    apply from: '../../../../GearVRf-Demos/common.gradle'
+}
+
 android {
-    compileSdkVersion 19
-    buildToolsVersion "21.1.2"
-
-    defaultConfig {
-        applicationId "com.samsung.android.gvr.sample"
-        minSdkVersion 19
-        targetSdkVersion 19
-    }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -21,16 +21,6 @@ android {
         jni.srcDirs = [] // no auto generation of Android.mk
         jniLibs.srcDir 'libs' // pre-compiled libraries
     }
-
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            output.outputFile = new File(
-                    output.outputFile.parent,
-                     rootProject.name + ".apk")
-        }
-    }
 }
 
-dependencies {
-    compile project(':framework')
-}
+
