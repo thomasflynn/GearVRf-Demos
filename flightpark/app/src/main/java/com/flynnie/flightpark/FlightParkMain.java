@@ -35,7 +35,7 @@ public class FlightParkMain extends GVRMain
     @Override
     public void onInit(GVRContext gvrContext) throws IOException {
 
-        GVRScene scene = gvrContext.getNextMainScene();
+        GVRScene scene = gvrContext.getMainScene();
         mCamera = scene.getMainCameraRig();
 
         // load texture asynchronously
