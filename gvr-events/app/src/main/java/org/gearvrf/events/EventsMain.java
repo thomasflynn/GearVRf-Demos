@@ -123,13 +123,15 @@ public class EventsMain extends GVRMain {
 
         frameWidth = frameLayout.getWidth();
         frameHeight = frameLayout.getHeight();
+
+        android.util.Log.d("gvrf", "wxh: " + frameWidth + "x" + frameHeight);
         float texelWidth = 1.0f / (float) frameWidth;
         float texelHeight = 1.0f / (float) frameHeight;
         float[] convolutionMatrix = {
-            1.0f, 2.0f, 1.0f, 0.0f,
-            2.0f, 4.0f, 2.0f, 0.0f,
-            1.0f, 2.0f, 1.0f, 0.0f,
-            0.0f, 0.0f, 0.0f, 0.0f
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f,
+            1.0f, 1.0f, 1.0f, 1.0f
         };
 
         GVRRenderData renderData = layoutSceneObject.getRenderData();
