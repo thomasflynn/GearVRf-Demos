@@ -41,6 +41,14 @@ import org.gearvrf.io.GVRInputManager;
 import org.gearvrf.scene_objects.GVRViewSceneObject;
 import org.gearvrf.scene_objects.view.GVRFrameLayout;
 
+import org.gearvrf.GVRRenderData;
+import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRExternalTexture;
+import org.gearvrf.GVRShaderTemplate;
+import org.gearvrf.GVRMaterialShaderManager;
+
+import org.gearvrf.events.ConvolutionShader;
+
 import java.util.List;
 
 public class EventsMain extends GVRMain {
@@ -108,16 +116,45 @@ public class EventsMain extends GVRMain {
     @Override
     public void onInit(final GVRContext gvrContext) throws Throwable {
         context = gvrContext;
+        mainScene = gvrContext.getMainScene();
 
         layoutSceneObject = new GVRViewSceneObject(gvrContext, frameLayout,
                 context.createQuad(QUAD_X, QUAD_Y));
-        mainScene = gvrContext.getMainScene();
-        mainScene.addSceneObject(layoutSceneObject);
-
-        layoutSceneObject.getTransform().setPosition(0.0f, 0.0f, DEPTH);
 
         frameWidth = frameLayout.getWidth();
         frameHeight = frameLayout.getHeight();
+        float texelWidth = 1.0f / (float) frameWidth;
+        float texelHeight = 1.0f / (float) frameHeight;
+        float[] convolutionMatrix = {
+            1.0f, 2.0f, 1.0f, 0.0f,
+            2.0f, 4.0f, 2.0f, 0.0f,
+            1.0f, 2.0f, 1.0f, 0.0f,
+            0.0f, 0.0f, 0.0f, 0.0f
+        };
+
+        GVRRenderData renderData = layoutSceneObject.getRenderData();
+        GVRMaterial material = renderData.getMaterial();
+        GVRExternalTexture externalTexture = (GVRExternalTexture) material.getMainTexture();
+
+        GVRMaterialShaderManager shaderManager = gvrContext.getMaterialShaderManager();
+
+        GVRShaderTemplate convolutionShader = shaderManager.retrieveShaderTemplate(ConvolutionShader.class);
+        material.setFloat("texelWidth", texelWidth);
+        material.setFloat("texelHeight", texelHeight);
+        material.setMat4("convolutionMatrix", 
+                convolutionMatrix[0], convolutionMatrix[1], convolutionMatrix[2], convolutionMatrix[3],
+                convolutionMatrix[4], convolutionMatrix[5], convolutionMatrix[6], convolutionMatrix[7],
+                convolutionMatrix[8], convolutionMatrix[9], convolutionMatrix[10], convolutionMatrix[11],
+                convolutionMatrix[12], convolutionMatrix[13], convolutionMatrix[14], convolutionMatrix[15]
+                );
+        material.setTexture("main_texture", externalTexture);
+        renderData.setShaderTemplate(ConvolutionShader.class);
+        convolutionShader.bindShader(gvrContext, renderData, mainScene);
+
+
+        mainScene.addSceneObject(layoutSceneObject);
+
+        layoutSceneObject.getTransform().setPosition(0.0f, 0.0f, DEPTH);
 
         // set up the input manager for the main scene
         GVRInputManager inputManager = gvrContext.getInputManager();
