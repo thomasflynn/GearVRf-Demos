@@ -17,9 +17,9 @@ varying vec2 bottomLeftTextureCoordinate;
 varying vec2 bottomRightTextureCoordinate;
 
 mediump mat3 matrix = mat3(
-            0.25f, 0.5f, 0.25f,
-            0.5f,  1.0f, 0.5f,
-            0.25f, 0.5f, 0.25f
+            0.25, 0.5, 0.25,
+            0.5,  1.0, 0.5,
+            0.25, 0.5, 0.25
         );
 
 
