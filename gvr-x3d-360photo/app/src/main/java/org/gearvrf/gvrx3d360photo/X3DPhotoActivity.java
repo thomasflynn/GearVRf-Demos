@@ -93,7 +93,6 @@ public class X3DPhotoActivity extends GVRActivity {
               }
             }
 
-
         }
     }
 }
