@@ -16,17 +16,32 @@
 package org.gearvrf.gvrx3d360photo;
 
 import android.os.Bundle;
+import android.util.Log;
+
+import java.io.IOException;
+import java.io.FileNotFoundException;
+
+import java.net.URL;
+import java.net.MalformedURLException;
+
 
 import org.gearvrf.GVRActivity;
-import org.gearvrf.GVRAndroidResource;
-import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRScene;
+import org.gearvrf.GVRResourceVolume;
+import org.gearvrf.GVRAndroidResource;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
+import org.gearvrf.GVRCameraRig;
+import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.io.GVRControllerType;
+import org.gearvrf.io.GVRInputManager;
 
 public class X3DPhotoActivity extends GVRActivity {
+
+    private static final String TAG = "X3DPhotoActivity";
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -38,19 +53,47 @@ public class X3DPhotoActivity extends GVRActivity {
         @Override
         public void onInit(GVRContext gvrContext) {
             GVRScene scene = gvrContext.getMainScene();
-            scene.setBackgroundColor(1, 1, 1, 1);
+            GVRCameraRig mainCameraRig = scene.getMainCameraRig();
 
-            GVRTexture texture = gvrContext.getAssetLoader().loadTexture(new GVRAndroidResource(gvrContext, R.drawable.gearvr_logo));
+            String filename = "photoviewer.x3d";
+            String url = new String(filename);
+            //String url = new String("http://172.28.4.157/models/x3d/" + filename);
 
-            // create a scene object (this constructor creates a rectangular scene
-            // object that uses the standard texture shader
-            GVRSceneObject sceneObject = new GVRSceneObject(gvrContext, 4.0f, 2.0f, texture);
+            GVRModelSceneObject model = new GVRModelSceneObject(gvrContext);
 
-            // set the scene object position
-            sceneObject.getTransform().setPosition(0.0f, 0.0f, -3.0f);
+            try {
+                model = gvrContext.getAssetLoader().loadModel(url.toString(), scene);
 
-            // add the scene object to the scene graph
-            scene.addSceneObject(sceneObject);
+                // set the scene object position
+                model.getTransform().setPosition(0.0f, 0.0f, -10.0f);
+
+                GVRTexture cursorTexture = gvrContext.getAssetLoader().loadTexture( new GVRAndroidResource(gvrContext, R.raw.cursor));
+                GVRSceneObject cursor = new GVRSceneObject(gvrContext, gvrContext.createQuad(1.0f, 1.0f), cursorTexture);
+
+                cursor.getTransform().setPosition(0.0f, 0.0f, -10.0f);
+                cursor.getRenderData().setDepthTest(false);
+                cursor.getRenderData().setRenderingOrder(100000);
+
+                mainCameraRig.addChildObject(cursor);
+
+                // add the scene object to the scene graph
+                scene.addSceneObject(model);
+            } catch (FileNotFoundException e) {
+              Log.d(TAG, "ERROR: FileNotFoundException: " + filename);
+            } catch (IOException e) {
+              Log.d(TAG, "Error IOException = " + e);
+            } catch (Exception e) {
+              e.printStackTrace();
+            }
+
+            GVRInputManager inputManager = gvrContext.getInputManager();
+            for (GVRCursorController controller : inputManager.getCursorControllers()) {
+              if (controller.getControllerType() == GVRControllerType.GAZE) {
+                controller.setPosition(0.0f, 0.0f, -10.0f);
+              }
+            }
+
+
         }
     }
 }
