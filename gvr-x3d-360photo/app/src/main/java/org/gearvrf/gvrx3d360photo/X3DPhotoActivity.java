@@ -67,15 +67,6 @@ public class X3DPhotoActivity extends GVRActivity {
                 // set the scene object position
                 model.getTransform().setPosition(0.0f, 0.0f, -10.0f);
 
-                GVRTexture cursorTexture = gvrContext.getAssetLoader().loadTexture( new GVRAndroidResource(gvrContext, R.raw.cursor));
-                GVRSceneObject cursor = new GVRSceneObject(gvrContext, gvrContext.createQuad(1.0f, 1.0f), cursorTexture);
-
-                cursor.getTransform().setPosition(0.0f, 0.0f, -10.0f);
-                cursor.getRenderData().setDepthTest(false);
-                cursor.getRenderData().setRenderingOrder(100000);
-
-                mainCameraRig.addChildObject(cursor);
-
                 // add the scene object to the scene graph
                 scene.addSceneObject(model);
             } catch (FileNotFoundException e) {
@@ -86,12 +77,7 @@ public class X3DPhotoActivity extends GVRActivity {
               e.printStackTrace();
             }
 
-            GVRInputManager inputManager = gvrContext.getInputManager();
-            for (GVRCursorController controller : inputManager.getCursorControllers()) {
-              if (controller.getControllerType() == GVRControllerType.GAZE) {
-                controller.setPosition(0.0f, 0.0f, -10.0f);
-              }
-            }
+            gvrContext.getInputManager().selectController();
 
         }
     }

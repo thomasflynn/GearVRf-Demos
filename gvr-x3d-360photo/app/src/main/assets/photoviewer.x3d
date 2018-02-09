@@ -325,7 +325,7 @@
             } 
             else
             { 
-                diffuseColor_changed = new SFColor(.7, .7, .7); 
+                diffuseColor_changed = new SFColor(.4, .4, .4); 
             }
         }
             
@@ -375,7 +375,7 @@
             } 
             else
             { 
-                diffuseColor_changed = new SFColor(.7, .7, .7); 
+                diffuseColor_changed = new SFColor(.4, .4, .4); 
             }
         }
             
@@ -424,7 +424,7 @@
             } 
             else
             { 
-                diffuseColor_changed = new SFColor(.7, .7, .7); 
+                diffuseColor_changed = new SFColor(.4, .4, .4); 
             }
         }
             
@@ -473,7 +473,7 @@
             } 
             else
             { 
-                diffuseColor_changed = new SFColor(.7, .7, .7); 
+                diffuseColor_changed = new SFColor(.4, .4, .4); 
             }
         }
             
@@ -522,7 +522,7 @@
             } 
             else
             { 
-                diffuseColor_changed = new SFColor(.7, .7, .7); 
+                diffuseColor_changed = new SFColor(.4, .4, .4); 
             }
         }
             
@@ -571,7 +571,7 @@
             } 
             else
             { 
-                diffuseColor_changed = new SFColor(.7, .7, .7); 
+                diffuseColor_changed = new SFColor(.4, .4, .4); 
             }
         }
             
