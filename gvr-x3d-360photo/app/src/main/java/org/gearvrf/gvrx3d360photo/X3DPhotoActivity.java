@@ -36,6 +36,7 @@ import org.gearvrf.GVRCameraRig;
 import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.debug.DebugServer;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
 
@@ -52,12 +53,13 @@ public class X3DPhotoActivity extends GVRActivity {
     private static class X3DPhotoMain extends GVRMain {
         @Override
         public void onInit(GVRContext gvrContext) {
+            final DebugServer debug = gvrContext.startDebugServer();
             GVRScene scene = gvrContext.getMainScene();
             GVRCameraRig mainCameraRig = scene.getMainCameraRig();
 
             String filename = "photoviewer.x3d";
-            String url = new String(filename);
-            //String url = new String("http://172.28.4.157/models/x3d/" + filename);
+            //String url = new String(filename);
+            String url = new String("http://172.28.4.157/~flynnt/models/x3d/" + filename);
 
             GVRModelSceneObject model = new GVRModelSceneObject(gvrContext);
 
@@ -65,7 +67,7 @@ public class X3DPhotoActivity extends GVRActivity {
                 model = gvrContext.getAssetLoader().loadModel(url.toString(), scene);
 
                 // set the scene object position
-                model.getTransform().setPosition(0.0f, 0.0f, -10.0f);
+                model.getTransform().setPosition(0.0f, 0.0f, 0.0f);
 
                 // add the scene object to the scene graph
                 scene.addSceneObject(model);
