@@ -59,7 +59,7 @@ public class X3DPhotoActivity extends GVRActivity {
 
             String filename = "photoviewer.x3d";
             //String url = new String(filename);
-            String url = new String("http://172.28.4.157/~flynnt/models/x3d/" + filename);
+            String url = new String("http://172.28.4.157/~mps/models/x3d/photoviewer/" + filename);
 
             GVRModelSceneObject model = new GVRModelSceneObject(gvrContext);
 
