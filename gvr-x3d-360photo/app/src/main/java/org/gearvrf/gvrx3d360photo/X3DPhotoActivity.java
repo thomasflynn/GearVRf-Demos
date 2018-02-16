@@ -33,12 +33,16 @@ import org.gearvrf.GVRResourceVolume;
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.scene_objects.GVRModelSceneObject;
 import org.gearvrf.GVRCameraRig;
-import org.gearvrf.GVRCursorController;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.GVRSceneObject;
 import org.gearvrf.debug.DebugServer;
+import org.gearvrf.io.GVRGearCursorController;
+import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
+import org.gearvrf.io.GVRInputManager.ICursorControllerSelectListener;
+
 
 public class X3DPhotoActivity extends GVRActivity {
 
@@ -79,7 +83,16 @@ public class X3DPhotoActivity extends GVRActivity {
               e.printStackTrace();
             }
 
-            gvrContext.getInputManager().selectController();
+            ICursorControllerSelectListener controllerListener = new ICursorControllerSelectListener() {
+                public void onCursorControllerSelected(GVRCursorController newController, GVRCursorController oldController)
+                {
+                    newController.setCursorDepth(20.0f);
+                    GVRSceneObject cursorObject = newController.getCursor();
+                    cursorObject.getTransform().setScale(1.0f, 1.0f, 1.0f);
+                }
+            };
+
+            gvrContext.getInputManager().selectController(controllerListener);
 
         }
     }
