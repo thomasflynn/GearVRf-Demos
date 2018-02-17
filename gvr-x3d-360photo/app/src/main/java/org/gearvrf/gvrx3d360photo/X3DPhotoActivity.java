@@ -57,13 +57,10 @@ public class X3DPhotoActivity extends GVRActivity {
     private static class X3DPhotoMain extends GVRMain {
         @Override
         public void onInit(GVRContext gvrContext) {
-            final DebugServer debug = gvrContext.startDebugServer();
             GVRScene scene = gvrContext.getMainScene();
             GVRCameraRig mainCameraRig = scene.getMainCameraRig();
 
-            String filename = "photoviewer.x3d";
-            //String url = new String(filename);
-            String url = new String("http://172.28.4.157/~mps/models/x3d/photoviewer/" + filename);
+            String url = "photoviewer.x3d";
 
             GVRModelSceneObject model = new GVRModelSceneObject(gvrContext);
 
@@ -76,13 +73,14 @@ public class X3DPhotoActivity extends GVRActivity {
                 // add the scene object to the scene graph
                 scene.addSceneObject(model);
             } catch (FileNotFoundException e) {
-              Log.d(TAG, "ERROR: FileNotFoundException: " + filename);
+              Log.d(TAG, "ERROR: FileNotFoundException: " + url);
             } catch (IOException e) {
               Log.d(TAG, "Error IOException = " + e);
             } catch (Exception e) {
               e.printStackTrace();
             }
 
+            // put the cursor at the same depth as the UI and scale it up a bit.
             ICursorControllerSelectListener controllerListener = new ICursorControllerSelectListener() {
                 public void onCursorControllerSelected(GVRCursorController newController, GVRCursorController oldController)
                 {
