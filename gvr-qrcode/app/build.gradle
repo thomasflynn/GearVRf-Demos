@@ -17,10 +17,12 @@ dependencies {
             debugCompile(name: 'x3d-debug', ext: 'aar')
             releaseCompile(name: 'x3d-release', ext: 'aar')
         }
-        compile "com.google.zxing:core:3.3.2"
+        implementation "com.google.zxing:core:3.3.2"
+//        implementation 'com.google.ar:core:1.0.0'
     } else {
-        compile "org.gearvrf:x3d:$gearvrfVersion"
-        compile "com.google.zxing:core:3.3.2"
+        implementation "org.gearvrf:x3d:$gearvrfVersion"
+        implementation "com.google.zxing:core:3.3.2"
+//        implementation 'com.google.ar:core:1.0.0'
     }
 }
 

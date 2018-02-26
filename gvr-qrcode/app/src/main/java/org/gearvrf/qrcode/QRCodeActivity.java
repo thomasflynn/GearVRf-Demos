@@ -41,6 +41,7 @@ import org.gearvrf.GVRMain;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
+import org.gearvrf.scene_objects.GVRModelSceneObject;
 
 import org.gearvrf.scene_objects.GVRCameraSceneObject;
 
@@ -136,6 +137,10 @@ public class QRCodeActivity extends GVRActivity {
 
     private static class QRCodeMain extends GVRMain {
         private Camera mCamera;
+        private GVRContext mContext;
+        private String currentUrl;
+        private GVRModelSceneObject mModel;
+        private GVRScene mScene;
 
         public QRCodeMain(Camera camera) {
             mCamera = camera;
@@ -143,8 +148,9 @@ public class QRCodeActivity extends GVRActivity {
 
         @Override
         public void onInit(GVRContext gvrContext) {
-            GVRScene scene = gvrContext.getMainScene();
-            scene.setBackgroundColor(1, 1, 1, 1);
+            mContext = gvrContext;
+            mScene = gvrContext.getMainScene();
+            mScene.setBackgroundColor(1, 1, 1, 1);
 
             GVRCameraSceneObject cameraObject = null;
             cameraObject = new GVRCameraSceneObject(gvrContext, 3.6f, 2.0f, mCamera);
@@ -152,9 +158,51 @@ public class QRCodeActivity extends GVRActivity {
 
             if(cameraObject != null) {
                 cameraObject.getTransform().setPosition(0.0f, 0.0f, -4.0f);
-                scene.addSceneObject(cameraObject);
+                mScene.addSceneObject(cameraObject);
             }
 
         }
+
+        public void checkForModelURL(String URL) {
+            final String url = URL;
+            mContext.runOnTheFrameworkThread(new Runnable() {
+                    public void run() {
+                        loadModelFromUrl(url);
+                    }
+                });
+
+        }
+
+        private void loadModelFromUrl(String url) {
+            // TODO:
+            //      show dialog with url text, 
+            //      ask if user wants to load.
+            //      if yes, check whether a webpage or 3d model
+            //          load appropriate content viewer
+            
+            // check if it ends with .x3d
+            // if not, exit
+            if(!url.endsWith(".x3d")) {
+                return;
+            }
+            
+            // if same as current url, return
+            if(currentUrl != null && currentUrl.equals(url)) {
+                return;
+            }
+            
+            // otherwise, 
+            //      set as new url, 
+            currentUrl = url;
+
+            //      remove old model,
+            mScene.removeSceneObject(mModel);
+
+            //      load model,
+            //      add new model to scene
+            // XXX
+        }
+
+
     }
 }
