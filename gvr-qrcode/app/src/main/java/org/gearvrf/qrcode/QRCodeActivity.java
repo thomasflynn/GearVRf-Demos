@@ -377,10 +377,8 @@ public class QRCodeActivity extends GVRActivity {
                 mScene.removeSceneObject(mModel);
 
                 try {
-                    //  load model,
+                    //  load model and add new model to scene
                     mModel = mContext.getAssetLoader().loadModel(url, mScene);
-                    //  add new model to scene
-                    mScene.addSceneObject(mModel);
                 } catch(IOException e) {
                 }
             }
