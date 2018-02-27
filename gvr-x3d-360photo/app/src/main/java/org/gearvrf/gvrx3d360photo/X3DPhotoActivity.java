@@ -70,8 +70,6 @@ public class X3DPhotoActivity extends GVRActivity {
                 // set the scene object position
                 model.getTransform().setPosition(0.0f, 0.0f, 0.0f);
 
-                // add the scene object to the scene graph
-                scene.addSceneObject(model);
             } catch (FileNotFoundException e) {
               Log.d(TAG, "ERROR: FileNotFoundException: " + url);
             } catch (IOException e) {
