@@ -88,6 +88,7 @@ public class QRCodeActivity extends GVRActivity {
 
             camera.setPreviewCallback(callback);
         } catch(Exception e) {
+            e.printStackTrace();
         }
 
         createSession();
@@ -95,10 +96,26 @@ public class QRCodeActivity extends GVRActivity {
         setMain(new QRCodeMain(camera, mSession));
     }
 
+    private boolean mUserRequestedInstall = true;
     private void createSession() {
         if (mSession == null) {
             Exception exception = null;
             String message = null;
+
+            /*
+            try {
+                switch(ArCoreApk.getInstance().requestInstall(this, mUserRequestedInstall) {
+                        case INSTALLED:
+                        break;
+
+                        case INSTALL_REQUESTED:
+                            mUserRequestedInstall = false;
+                        break;
+                }
+            } catch(UnavailableUserDeclinedInstallationException e) {
+                return;
+            }
+            */
 
             try {
                 // ARCore requires camera permissions to operate. If we did not yet obtain runtime
@@ -144,6 +161,7 @@ public class QRCodeActivity extends GVRActivity {
 
     @Override
     public void onPause() {
+        super.onPause();
         if (mSession != null) {
             mSession.pause();
         }
@@ -225,6 +243,7 @@ public class QRCodeActivity extends GVRActivity {
         private Quaternionf diffCamDet;
         private int cnt = 0;
         private GVRSceneObject mainSceneLocal = null;
+        private GVRCameraSceneObject cameraObject;
 
 
         public QRCodeMain(Camera camera, Session session) {
@@ -241,7 +260,6 @@ public class QRCodeActivity extends GVRActivity {
             mainSceneLocal = new GVRSceneObject(gvrContext);
             mCameraRig.addChildObject(mainSceneLocal);
 
-            GVRCameraSceneObject cameraObject = null;
             cameraObject = new GVRCameraSceneObject(gvrContext, 3.6f, 2.0f, mCamera);
             cameraObject.setUpCameraForVrMode(1); // set up 60 fps camera preview.
 
@@ -251,18 +269,19 @@ public class QRCodeActivity extends GVRActivity {
             }
 
 
-            GVRRenderData renderdata = cameraObject.getRenderData();
-            GVRMaterial material = renderdata.getMaterial();
-            GVRTexture texture = material.getMainTexture();
-            int glTextureID = texture.getId(); // XXX how can this work?  geting a texture id in this thread?  this can't be right, right?
-            mSession.setCameraTextureName(glTextureID);
-
             mModel = new GVRModelSceneObject(gvrContext);
 
             gvrContext.registerDrawFrameListener(new GVRDrawFrameListener() {
 
             @Override
             public void onDrawFrame(float v) {
+                if (firstDetection) {
+                    GVRRenderData renderdata = cameraObject.getRenderData();
+                    GVRMaterial material = renderdata.getMaterial();
+                    GVRTexture texture = material.getMainTexture();
+                    int glTextureID = texture.getId(); 
+                    mSession.setCameraTextureName(glTextureID);
+                }
 
                 try {
                     // Obtain the current frame from ARSession. When the configuration is set to
