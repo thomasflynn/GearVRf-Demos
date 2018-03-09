@@ -23,6 +23,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRMaterial;
+import org.gearvrf.GVRMaterial.GVRShaderType;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 
 public class Minimal360PhotoMain extends GVRMain {
@@ -38,8 +39,12 @@ public class Minimal360PhotoMain extends GVRMain {
         // load texture
         GVRTexture texture = gvrContext.getAssetLoader().loadTexture(new GVRAndroidResource(gvrContext, R.raw.photosphere));
 
+        GVRMaterial material = new GVRMaterial(gvrContext, GVRShaderType.UnlitVerticalStereo.ID);
+        material.setMainTexture(texture);
+
         // create a sphere scene object with the specified texture and triangles facing inward (the 'false' argument)
-        sphereObject = new GVRSphereSceneObject(gvrContext, 72, 144, false, texture);
+        sphereObject = new GVRSphereSceneObject(gvrContext, 72, 144, false, material);
+
 
         // add the scene object to the scene graph
         scene.addSceneObject(sphereObject);
