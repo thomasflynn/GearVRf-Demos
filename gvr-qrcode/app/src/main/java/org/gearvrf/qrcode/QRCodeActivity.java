@@ -15,16 +15,25 @@
 
 package org.gearvrf.qrcode;
 
-import android.os.Bundle;
 import java.io.File;
-import android.os.Environment;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Hashtable;
 
+import android.os.Bundle;
+import android.os.AsyncTask;
+import android.os.Environment;
+import android.os.Handler;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
+import android.view.MotionEvent;
 
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.DecodeHintType;
@@ -33,12 +42,6 @@ import com.google.zxing.Result;
 import com.google.zxing.PlanarYUVLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
-
-
-import android.os.AsyncTask;
-import android.graphics.Bitmap;
-import java.util.Hashtable;
-import java.io.IOException;
 
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
@@ -71,16 +74,26 @@ import org.joml.Vector3f;
 import java.nio.*;
 import java.net.*;
 
+import com.google.ar.core.Anchor;
+import com.google.ar.core.ArCoreApk;
+import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
-import com.google.ar.core.Session;
-import com.google.ar.core.TrackingState;
+import com.google.ar.core.HitResult;
+import com.google.ar.core.Plane;
+import com.google.ar.core.Point;
+import com.google.ar.core.PointCloud;
+import com.google.ar.core.Point.OrientationMode;
 import com.google.ar.core.Pose;
+import com.google.ar.core.Session;
+import com.google.ar.core.Trackable;
+import com.google.ar.core.TrackingState;
+
 import com.google.ar.core.examples.java.computervision.utility.CameraPermissionHelper;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 
-public class QRCodeActivity extends GVRActivity {
+public class QRCodeActivity extends GVRActivity implements SpeechRecognizerManager.OnResultListener {
 
     private Session mARCoreSession;
     private boolean mARCoreIsPaused = true;
@@ -91,10 +104,15 @@ public class QRCodeActivity extends GVRActivity {
     private int frameNumber = 0;
     private int frameTotal = 60;
     private QRCodeMain mQRMain;
+    private SpeechRecognizerManager mSpeechRecognizerManager;
+    private Handler mHandler;
+    private long lastDownTime = 0;
 
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+
+        mHandler = new Handler();
 
         mQRCodeCallback = new QRCodeCallback(this);
 
@@ -102,13 +120,56 @@ public class QRCodeActivity extends GVRActivity {
         pauseARCoreSession();
 
         mQRMain = new QRCodeMain(mARCoreSession, mCamera, this);
+
+        /*
+        mSpeechRecognizerManager = new SpeechRecognizerManager(this);
+        mSpeechRecognizerManager.setOnResultListner(this);
+        */
+
         setMain(mQRMain);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            lastDownTime = event.getDownTime();
+        }
+
+        if (event.getActionMasked() == MotionEvent.ACTION_UP) {
+            // check if it was a quick tap
+            if (event.getEventTime() - lastDownTime < 200) {
+                // pass it as a tap to the Main
+                mQRMain.onTap();
+            }
+        }
+
+        return true;
+    }
+
+
+    @Override
+    public void OnResult(ArrayList<String> commands) {
+        for(String command:commands)
+        {
+            if (command.equals("close")){
+                android.util.Log.d("QRCode", "closing scene");
+                pauseARCoreSession();
+                mQRMain.closeScene();
+                return;
+            } else {
+                android.util.Log.d("QRCode", "OnResult, You said: "+command);
+            }
+
+        }
     }
 
     public void foundQRCode(String decodedText) {
         boolean found = mQRMain.checkForModelURL(decodedText);
         if(found) {
             resumeARCoreSession(); 
+            if(mSpeechRecognizerManager != null) {
+                mSpeechRecognizerManager.startListening();
+            }
         }
     }
 
@@ -192,6 +253,9 @@ public class QRCodeActivity extends GVRActivity {
     }
 
     private void resumeQRCamera() {
+        if(mSpeechRecognizerManager != null) {
+            mSpeechRecognizerManager.stopListening();
+        }
         android.util.Log.d("QRCode", "resuming QRCamera");
         mCamera = Camera.open();
         mCamera.startPreview();
@@ -203,7 +267,7 @@ public class QRCodeActivity extends GVRActivity {
 
         mCamera.setPreviewCallback(mQRCodeCallback);
         if(mQRMain != null) {
-            mQRMain.resetPreviewTexture();
+            mQRMain.resetPreviewTexture(mCamera);
         }
     }
 
@@ -296,9 +360,13 @@ public class QRCodeActivity extends GVRActivity {
         super.onPause();
         if (mARCoreSession != null && mARCoreIsPaused != true) {
             pauseARCoreSession();
+        } else {
+            pauseQRCamera();
         }
 
-        pauseQRCamera();
+        if(mSpeechRecognizerManager != null) {
+            mSpeechRecognizerManager.destroy();
+        }
     }
 
 
@@ -314,7 +382,6 @@ public class QRCodeActivity extends GVRActivity {
         private Quaternionf originalCameraRot;
         private Quaternionf initialDetectionRot;
         private Quaternionf diffCamDet;
-        private int cnt = 0;
         private GVRSceneObject mainSceneLocal = null;
         private GVRSceneObject cameraObject;
         private GVRSceneObject cameraPreview;
@@ -332,11 +399,18 @@ public class QRCodeActivity extends GVRActivity {
         private SurfaceTexture mSurfaceTexture;
         public boolean mIsPaused = true;
         private QRCodeActivity mActivity;
+        private boolean placementTap = false;
+        private final ArrayList<Anchor> anchors = new ArrayList<>();
+        private List<GVRSceneObject> planeObjects = new ArrayList<GVRSceneObject>();
 
         public QRCodeMain(Session session, Camera camera, QRCodeActivity activity) {
             mARCoreSession = session;
             mCamera = camera;
             mActivity = activity;
+        }
+
+        public void onTap() {
+            placementTap = true;
         }
 
         @Override
@@ -347,6 +421,16 @@ public class QRCodeActivity extends GVRActivity {
             mCameraRig = mScene.getMainCameraRig();
             mainSceneLocal = new GVRSceneObject(gvrContext);
             mCameraRig.addChildObject(mainSceneLocal);
+        
+            GVRTexture planeTexture = gvrContext.getAssetLoader().loadTexture(new GVRAndroidResource(gvrContext, R.drawable.gearvr_logo));
+
+            for(int i=0; i<20; i++) {
+                GVRSceneObject plane = new GVRSceneObject(gvrContext, 1.0f, 1.0f, planeTexture);
+                plane.getTransform().setRotationByAxis(-90.0f, 1.0f, 0.0f, 0.0f);
+                plane.setEnable(false);
+                mainSceneLocal.addChildObject(plane);
+                planeObjects.add(plane);
+            }
 
             GVRMesh mesh = gvrContext.createQuad(3.6f, 2.0f);
 //            cameraObject = new GVRSceneObject(gvrContext, mesh);
@@ -374,7 +458,7 @@ public class QRCodeActivity extends GVRActivity {
 
             //readbackBuffer = new int[TEXTURE_WIDTH * TEXTURE_HEIGHT];
 
-            resetPreviewTexture();
+            resetPreviewTexture(mCamera);
 
                     /*
             gvrContext.runOnGlThread(new Runnable() {
@@ -480,8 +564,92 @@ public class QRCodeActivity extends GVRActivity {
                     translattionV.rotate(toRotate);
                     mainSceneLocal.getTransform().setPosition(-translattionV.x(), -translattionV.y(), -translattionV.z());
 
-                    cnt++;
 //        android.util.Log.d("QRCode", "ARCore pose calculated: " + -translattionV.x() + ", " + -translattionV.y() + ", " + -translattionV.z());
+
+                    if(placementTap) {
+android.util.Log.d("QRCode", "tap!");
+                        placementTap = false;
+                        float x = 2960 / 2;
+                        float y = 1440 / 2;
+                        for(HitResult hit : frame.hitTest(x, y)) {
+android.util.Log.d("QRCode", "a plane was hit");
+                            // check if any plane was hit
+                            Trackable trackable = hit.getTrackable();
+
+                            // creates an anchor if a plane or an oriented point was hit
+                            if((trackable instanceof Plane && ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) ||
+                              (trackable instanceof Point &&
+                              ((Point) trackable).getOrientationMode() == Point.OrientationMode.ESTIMATED_SURFACE_NORMAL)) {
+                                // Hits are sorted by depth.  consider only closest hit on a plane or iented point.
+                                // cpa the number of objects created.  this avoids overloading ARCore.
+                                if(anchors.size() >= 1) {
+                                    anchors.get(0).detach();
+                                    anchors.remove(0);
+                                }
+
+                                // Adding an anchor tells ARCore that is should track this position in space.
+                                // This anchor is created on the Plane to place the 3d model in the correct position relative both to the word and the plane.
+                                anchors.add(hit.createAnchor());
+android.util.Log.d("QRCode", "an anchor was added");
+                                break;
+                            }
+                        }
+                    }
+
+                    // visualize planes
+                    Collection<Plane> allPlanes = mARCoreSession.getAllTrackables(Plane.class);
+//android.util.Log.d("QRCode", "going to iterate through planes");
+                    for(Plane plane : allPlanes) {
+                        int i = 0;
+//android.util.Log.d("QRCode", "plane: " + i);
+                        if(plane.getTrackingState() != TrackingState.TRACKING || plane.getSubsumedBy() != null) {
+//android.util.Log.d("QRCode", "  not tracking");
+                            continue;
+                        }
+
+                        if(plane.getType() != com.google.ar.core.Plane.Type.HORIZONTAL_UPWARD_FACING) {
+//android.util.Log.d("QRCode", "  not upward facing");
+                            continue;
+                        }
+
+                        Pose center = plane.getCenterPose();
+
+                        float[] position = new float[3];
+                        center.getTranslation(position, 0);
+
+                        float scaleX = plane.getExtentX();
+                        float scaleZ = plane.getExtentZ();
+
+                        planeObjects.get(i).getTransform().setPosition(position[0], position[1], position[2]);
+                        planeObjects.get(i).getTransform().setScale(scaleX, scaleZ, 1.0f);
+                        planeObjects.get(i).setEnable(true);
+//android.util.Log.d("QRCode", "  position: " + position[0] + ", " + position[1] + ", " + position[2]);
+//android.util.Log.d("QRCode", "  scale   : " + scaleX + ", " + scaleZ);
+                        i++;
+                    }
+
+                    // visualize anchors created by touch
+                    for(Anchor anchor : anchors) {
+                        if(anchor.getTrackingState() != TrackingState.TRACKING || mModel == null) {
+                            continue;
+                        }
+android.util.Log.d("QRCode", "anchor found");
+
+                        // get current pose of an anchor in world space.
+                        // the anchor pose is updated during calls to mARCoreSession.update() as ARCore refines its estimate of the world.
+                        Pose anchorPose = anchor.getPose();
+android.util.Log.d("QRCode", "anchor pose: " + anchorPose);
+
+                        mModel.getTransform().setPosition(anchorPose.tx(),
+                                                        anchorPose.ty(),
+                                                        anchorPose.tz());
+
+                        mModel.getTransform().setRotation(anchorPose.qw(),
+                                                        anchorPose.qx(),
+                                                        anchorPose.qy(),
+                                                        anchorPose.qz());
+                    }
+
                 } catch (Throwable t) {
                     // Avoid crashing the application due to unhandled exceptions.
                     android.util.Log.e(TAG, "Exception on the OpenGL thread", t);
@@ -506,11 +674,16 @@ public class QRCodeActivity extends GVRActivity {
             }
         }
 
-        public void resetPreviewTexture() {
+        public void resetPreviewTexture(Camera camera) {
+            if(camera == null) {
+            //    return;
+            }
+
+            mCamera = camera;
             if(cameraPreview == null) {
                 return;
             }
-            mContext.runOnGlThread(new Runnable() {
+            mContext.runOnGlThreadPostRender(5, new Runnable() {
                 @Override
                 public void run()
                 {
@@ -578,12 +751,16 @@ public class QRCodeActivity extends GVRActivity {
 
             //  load model and add new model to scene
             android.util.Log.d("QRCode", "going to load: " + url);
-            //mModel = mContext.getAssetLoader().loadModel(url, mScene);
             GVRResourceVolume volume = new GVRResourceVolume(mContext, url);
             mContext.getAssetLoader().loadModel(mModel, volume, mScene);
             android.util.Log.d("QRCode", "loaded");
         }
 
-
+        public void closeScene() {
+            if(mScene != null && mModel != null) {
+                mScene.removeSceneObject(mModel);
+                currentUrl = null;
+            }
+        }
     }
 }
