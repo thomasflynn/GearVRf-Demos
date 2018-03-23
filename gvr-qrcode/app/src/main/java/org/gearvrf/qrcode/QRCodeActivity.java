@@ -139,7 +139,10 @@ public class QRCodeActivity extends GVRActivity implements SpeechRecognizerManag
             // check if it was a quick tap
             if (event.getEventTime() - lastDownTime < 200) {
                 // pass it as a tap to the Main
-                mQRMain.onTap();
+                float x,y;
+                x = event.getX();
+                y = event.getY();
+                mQRMain.onTap(event, x, y);
             }
         }
 
@@ -400,6 +403,9 @@ public class QRCodeActivity extends GVRActivity implements SpeechRecognizerManag
         public boolean mIsPaused = true;
         private QRCodeActivity mActivity;
         private boolean placementTap = false;
+        private float placementX;
+        private float placementY;
+        private MotionEvent placementEvent;
         private final ArrayList<Anchor> anchors = new ArrayList<>();
         private List<GVRSceneObject> planeObjects = new ArrayList<GVRSceneObject>();
 
@@ -409,7 +415,10 @@ public class QRCodeActivity extends GVRActivity implements SpeechRecognizerManag
             mActivity = activity;
         }
 
-        public void onTap() {
+        public void onTap(MotionEvent event, float x, float y) {
+            placementEvent = event;
+            placementX = x;
+            placementY = y;
             placementTap = true;
         }
 
@@ -571,8 +580,14 @@ android.util.Log.d("QRCode", "tap!");
                         placementTap = false;
                         float x = 2960 / 2;
                         float y = 1440 / 2;
-                        for(HitResult hit : frame.hitTest(x, y)) {
+
+                        android.util.Log.d("QRCode", "x, y = " + x + ", " + y);
+                        android.util.Log.d("QRCode", "placement x, y = " + placementX + ", " + placementY);
+                        android.util.Log.d("QRCode", "placement Event = " + placementEvent);
+                        for(HitResult hit : frame.hitTest(placementEvent)) {
+android.util.Log.d("QRCode", "!!!!!!!!!!!!!!!");
 android.util.Log.d("QRCode", "a plane was hit");
+android.util.Log.d("QRCode", "!!!!!!!!!!!!!!!");
                             // check if any plane was hit
                             Trackable trackable = hit.getTrackable();
 
