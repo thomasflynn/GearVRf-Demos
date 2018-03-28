@@ -29,11 +29,8 @@
         framebufferPixelsWide="DEFAULT"
         showLoadingIcon="true"
         useProtectedFramebuffer="false"
+        useControllerTypes="gaze,controller"
         useSrgbFramebuffer="false" >
-
-        <mono-mode-parms
-            monoFullScreen="false"
-            monoMode="false" />
 
         <mode-parms
             allowPowerSave="true"
@@ -46,7 +43,7 @@
         <eye-buffer-parms
             colorFormat="COLOR_8888"
             depthFormat="DEPTH_24"
-            fov-y="DEFAULT"
+            fov-y="60"
             multiSamples="2"
             resolutionWidth="DEFAULT"
             resolutionHeight="DEFAULT"
