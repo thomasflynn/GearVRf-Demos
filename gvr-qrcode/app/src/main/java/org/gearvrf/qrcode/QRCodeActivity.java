@@ -705,11 +705,10 @@ android.util.Log.d("QRCode", "anchor pose: " + anchorPose);
             public void onTouchStart(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject pickInfo) {
                 if(sceneObj == mModel || sceneObj == mSphere) {
                     mModelIsRotating = true;
-                    android.util.Log.d("QRCode", "onTouchBegin, mModel is now rotating");
+                    //android.util.Log.d("QRCode", "onTouchBegin, mModel is now rotating");
                     mYaw = mModel.getTransform().getRotationYaw();
-                    mYaw = mSphere.getTransform().getRotationYaw();
-                    float[] hitLocation = pickInfo.getHitLocation();
-                    mHitX = hitLocation[0];
+                    //mYaw = mSphere.getTransform().getRotationYaw();
+                    mHitX = pickInfo.motionEvent.getX();
                     return;
                 }
 
@@ -717,7 +716,7 @@ android.util.Log.d("QRCode", "anchor pose: " + anchorPose);
                 // otherwise it was a plane
                 for(int i=0; i<20 && !planeHit; i++) {
                     if(sceneObj == planeObjects.get(i)) {
-                        android.util.Log.d("QRCode", "onTouchBegin, plane " + i + " was hit");
+                        //android.util.Log.d("QRCode", "onTouchBegin, plane " + i + " was hit");
                         planeHit = true;
                     }
                 }
@@ -751,7 +750,7 @@ android.util.Log.d("QRCode", "anchor pose: " + anchorPose);
                     */
 
                     mModel.getTransform().setPosition(location.x, location.y, location.z);
-                    mSphere.getTransform().setPosition(location.x, location.y, location.z);
+                    //mSphere.getTransform().setPosition(location.x, location.y, location.z);
                 }
 
                 /*
@@ -768,7 +767,7 @@ android.util.Log.d("QRCode", "anchor pose: " + anchorPose);
             public void onTouchEnd(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject pickInfo) {
                 if(sceneObj == mModel || sceneObj == mSphere) {
                     mModelIsRotating = false;
-                    android.util.Log.d("QRCode", "onTouchEnd, mModel not rotating");
+                    //android.util.Log.d("QRCode", "onTouchEnd, mModel not rotating");
                 }
 
                 /*
@@ -781,12 +780,23 @@ android.util.Log.d("QRCode", "anchor pose: " + anchorPose);
                 */
             }
 
+            // TODO
+            //      translation
+            //      rotation
+            //      accept
+            //      cancel
+            //
+            //      bounding box XXX
+            //      highlight
+            //      ARCore anchors
+            //      enable placement logic via javascript
+            //
             public void onInside(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject pickInfo) { 
-                if(sceneObj != mSphere) {//XXX
-                    android.util.Log.d("QRCode", "onInside, not mModel, returning");
+                if(sceneObj != mModel) {
+                    //android.util.Log.d("QRCode", "onInside, not mModel, returning");
                     return;
                 } else {
-                    android.util.Log.d("QRCode", "onInside, is mModel");
+                    //android.util.Log.d("QRCode", "onInside, is mModel");
                 }
 
                 if(!mModelIsRotating) { 
@@ -794,17 +804,22 @@ android.util.Log.d("QRCode", "anchor pose: " + anchorPose);
                     return; 
                 }
 
-                float[] hitLocation = pickInfo.getHitLocation();
-                float diffX = hitLocation[0] - mHitX;
+                if(pickInfo.motionEvent == null) {
+                    android.util.Log.d("QRCode", "onInside, motionEvent was null");
+                    return;
+                }
 
-                android.util.Log.d("QRCode", "onInside, mYaw = " + mYaw);
+                float hitLocation = pickInfo.motionEvent.getX();
+                float diffX = hitLocation - mHitX;
 
-                float angle = mYaw + (diffX * 80);
-                android.util.Log.d("QRCode", "onInside, mHitX = " + mHitX);
-                android.util.Log.d("QRCode", "onInside, location[0] = " + hitLocation[0]);
-                android.util.Log.d("QRCode", "onInside, diffX = " + diffX);
-                android.util.Log.d("QRCode", "onInside, angle = " + angle);
-                mSphere.getTransform().setRotationByAxis(angle, 0.0f, 1.0f, 0.0f);
+                //android.util.Log.d("QRCode", "onInside, mYaw = " + mYaw);
+
+                float angle = mYaw + (diffX * 2);
+                //android.util.Log.d("QRCode", "onInside, mHitX = " + mHitX);
+                //android.util.Log.d("QRCode", "onInside, location[0] = " + hitLocation);
+                //android.util.Log.d("QRCode", "onInside, diffX = " + diffX);
+                //android.util.Log.d("QRCode", "onInside, angle = " + angle);
+                //mSphere.getTransform().setRotationByAxis(angle, 0.0f, 1.0f, 0.0f);
                 mModel.getTransform().setRotationByAxis(angle, 0.0f, 1.0f, 0.0f);
 
             }
@@ -913,14 +928,14 @@ android.util.Log.d("QRCode", "anchor pose: " + anchorPose);
             //GVRResourceVolume volume = new GVRResourceVolume(mContext, url);
             try {
                 mModel = mContext.getAssetLoader().loadModel(urlString, new AssetHandler());
-                //mainSceneLocal.addChildObject(mModel);
-                mSphere = new GVRSphereSceneObject(mContext, true, planeTexture);
-                mSphere.getTransform().setPosition(0.0f, 0.0f, -5.0f);
-                mSphere.getTransform().setScale(0.1f, 0.1f, 0.1f);
-                mainSceneLocal.addChildObject(mSphere);
+                mainSceneLocal.addChildObject(mModel);
+                //mSphere = new GVRSphereSceneObject(mContext, true, planeTexture);
+                //mSphere.getTransform().setPosition(0.0f, 0.0f, -5.0f);
+                //mSphere.getTransform().setScale(0.1f, 0.1f, 0.1f);
+                //mainSceneLocal.addChildObject(mSphere);
                 GVRSphereCollider sphere = new GVRSphereCollider(mContext);
-                sphere.setRadius(1.0f);
-                mSphere.attachComponent(sphere);
+                sphere.setRadius(0.4f);
+                mModel.attachComponent(sphere);
             } catch (IOException e) {
                 e.printStackTrace();
             }
