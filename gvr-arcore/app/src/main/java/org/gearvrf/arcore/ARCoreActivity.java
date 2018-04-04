@@ -16,6 +16,7 @@
 package org.gearvrf.arcore;
 
 import android.os.Bundle;
+import android.view.MotionEvent;
 
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRAndroidResource;
@@ -29,6 +30,7 @@ import org.gearvrf.GVREventListeners;
 import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRPicker.GVRPickedObject;
 import org.gearvrf.GVRMeshCollider;
+import org.gearvrf.GVRSphereCollider;
 
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 
@@ -67,20 +69,41 @@ public class ARCoreActivity extends GVRActivity {
             sceneObject.getTransform().setPosition(0.0f, -3.0f, -3.0f);
             sceneObject.getTransform().setRotationByAxis(-90.0f, 1.0f, 0.0f, 0.0f);
             sceneObject.attachComponent(new GVRMeshCollider(gvrContext, null, true));
+            sceneObject.setName("quad");
+            android.util.Log.d("QRCode", "sceneObject: " + sceneObject);
 
             // add the scene object to the scene graph
             scene.addSceneObject(sceneObject);
 
-            mModel = new GVRCylinderSceneObject(gvrContext, true, redtexture);
+            mModel = new GVRCylinderSceneObject(gvrContext, true, texture);
+            mModel.setName("cylinder");
+            GVRSphereCollider sphere = new GVRSphereCollider(gvrContext);
+            sphere.setRadius(1.0f);
+            mModel.attachComponent(sphere);
+            mModel.getTransform().setPosition(1.0f, 0.0f, -5.0f);
             scene.addSceneObject(mModel);
 
             gvrContext.getInputManager().selectController(new ControllerSelector());
+            android.util.Log.d("QRCode", "mModel: " + mModel);
 
         }
 
         public class TouchHandler extends GVREventListeners.TouchEvents {
             private GVRSceneObject mDragged = null;
+            private boolean mModelIsRotating = false;
+            private float mYaw = 0;
+            private float mHitX = 0;
+
             public void onTouchStart(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject pickInfo) {
+
+            android.util.Log.d("QRCode", "onTouchBegin, sceneObj: " + sceneObj.getName());
+                if(sceneObj == mModel) {
+                    mModelIsRotating = true;
+                    mYaw = mModel.getTransform().getRotationYaw();
+                    mHitX = pickInfo.motionEvent.getX();
+                    return;
+                }
+
                 float[] hitLocation = pickInfo.getHitLocation();
                 android.util.Log.d("QRCode", "hitLocation: " + 
                         hitLocation[0] + ", " +
@@ -98,7 +121,7 @@ public class ARCoreActivity extends GVRActivity {
                             location.y + ", " +
                             location.z);
 
-                    mModel.getTransform().setPosition(location.x, location.y, location.z);
+                    mModel.getTransform().setPosition(location.x, location.y+1.0f, location.z);
                 }
 
                 /*
@@ -113,6 +136,10 @@ public class ARCoreActivity extends GVRActivity {
             }
 
             public void onTouchEnd(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject pickInfo) {
+            android.util.Log.d("QRCode", "onTouchEnd, sceneObj: " + sceneObj.getName());
+                if(sceneObj == mModel) {
+                    mModelIsRotating = false;
+                }
                 /*
                 if(mDragged == sceneObj) {
                     GVRPicker picker = pickInfo.picker;
@@ -124,7 +151,29 @@ public class ARCoreActivity extends GVRActivity {
             }
 
             public void onInside(GVRSceneObject sceneObj, GVRPicker.GVRPickedObject pickInfo) {
+            android.util.Log.d("QRCode", "onInside, sceneObj: " + sceneObj.getName());
                 //
+                if(sceneObj != mModel) {
+                    return;
+                }
+
+                if(!mModelIsRotating) {
+                    return;
+                }
+
+                float hitLocation = pickInfo.motionEvent.getX();
+                float diffX = hitLocation - mHitX;
+
+                float angle = mYaw + (diffX * 2);
+
+                android.util.Log.d("QRCode", "onInside, mHitX = " + mHitX);
+                android.util.Log.d("QRCode", "onInside, location = " + hitLocation);
+                android.util.Log.d("QRCode", "onInside, diffX = " + diffX);
+                android.util.Log.d("QRCode", "onInside, angle = " + angle);
+
+                mModel.getTransform().setRotationByAxis(angle, 0.0f, 1.0f, 0.0f);
+
+
                 // hitLocation x getModelMatrix = world coordinates
                 //
 
