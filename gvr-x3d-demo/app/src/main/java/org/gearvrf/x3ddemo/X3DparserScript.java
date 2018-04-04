@@ -28,6 +28,8 @@ import org.gearvrf.GVRLight;
 import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRDirectLight;
 
+import org.gearvrf.GVREventListeners;
+
 import org.gearvrf.GVRMain;
 import org.gearvrf.GVRShader;
 import org.gearvrf.io.GVRControllerType;
@@ -62,6 +64,7 @@ public class X3DparserScript extends GVRMain
   private static final String TAG = X3DparserScript.class.getSimpleName();
   private GVRContext mGVRContext = null;
   GVRScene scene = null;
+  GVRModelSceneObject mModel;
 
   public X3DparserScript(X3DparserActivity activity)
   {
@@ -75,15 +78,17 @@ public class X3DparserScript extends GVRMain
     scene.getMainCameraRig().getLeftCamera().setBackgroundColor(Color.BLACK);
     scene.getMainCameraRig().getRightCamera().setBackgroundColor(Color.BLACK);
 
-    GVRModelSceneObject model = new GVRModelSceneObject(mGVRContext);
+    mModel = new GVRModelSceneObject(mGVRContext);
     // X3D test files should be in the assets directory.
     // Replace 'filename' to view another .x3d file
-    String filename = "cylindersandplanes.x3d";
+    //String filename = "cylindersandplanes.x3d";
+    String filename = "http://172.28.4.83/~flynnt/models/x3d/immersivepedia/trex_mesh.x3d";
     try
     {
       GVRCameraRig mainCameraRig = scene.getMainCameraRig();
 
-      model = gvrContext.getAssetLoader().loadModel(filename, scene);
+      mModel = gvrContext.getAssetLoader().loadModel(filename, new AssetHandler());
+      scene.addSceneObject(mModel);
 
       // check if a headlight was attached to the model's camera rig
       // during parsing, as specified by the NavigationInfo node.
@@ -91,14 +96,14 @@ public class X3DparserScript extends GVRMain
       // directionalLight. Thus attach a dirLight to the main camera
       if (GVRShader.isVulkanInstance()) // remove light on Vulkan
       {
-        List<GVRLight> lights = model.getAllComponents(GVRLight.getComponentType());
+        List<GVRLight> lights = mModel.getAllComponents(GVRLight.getComponentType());
         for (GVRLight l : lights)
         {
           GVRSceneObject owner = l.getOwnerObject();
           owner.getParent().removeChildObject(owner);
         }
       }
-      else if (model.getCameraRig().getChildrenCount() > 3)
+      else if (mModel.getCameraRig() != null && mModel.getCameraRig().getChildrenCount() > 3)
       {
         GVRSceneObject headlightSceneObject = new GVRSceneObject(gvrContext);
         headlightSceneObject.setName("headlightSceneObject");
@@ -128,6 +133,35 @@ public class X3DparserScript extends GVRMain
   public void onStep()
   {
     FPSCounter.tick();
+  }
+
+  public class AssetHandler extends GVREventListeners.AssetEvents {
+    public void onAssetLoaded(GVRContext context, GVRSceneObject model, String filePath, java.lang.String errors) { 
+        //GVRSphereCollider sphere = new GVRSphereCollider(mContext);
+        android.util.Log.d(TAG, "onAssetLoaded");
+        android.util.Log.d(TAG, "loaded and collider added with radius: " + model.getBoundingVolume().radius);
+        android.util.Log.d(TAG, "center: " + model.getBoundingVolume().center);
+        android.util.Log.d(TAG, "minCorner: " + model.getBoundingVolume().minCorner);
+        android.util.Log.d(TAG, "maxCorner: " + model.getBoundingVolume().maxCorner);
+        //sphere.setRadius(mModel.getBoundingVolume().radius);
+        //sphere.setRadius(1.0f);
+        //mModel.attachComponent(sphere);
+        //mSphere.attachComponent(sphere);
+        //android.util.Log.d(TAG, "loaded and collider added");
+    }
+
+    public void onModelLoaded(GVRContext context, GVRSceneObject model, String filePath) { 
+        //GVRSphereCollider sphere = new GVRSphereCollider(mContext);
+        android.util.Log.d(TAG, "onModelLoaded");
+        android.util.Log.d(TAG, "loaded and collider added with radius: " + model.getBoundingVolume().radius);
+        android.util.Log.d(TAG, "center: " + model.getBoundingVolume().center);
+        android.util.Log.d(TAG, "minCorner: " + model.getBoundingVolume().minCorner);
+        android.util.Log.d(TAG, "maxCorner: " + model.getBoundingVolume().maxCorner);
+        //sphere.setRadius(mModel.getBoundingVolume().radius);
+        //mModel.attachComponent(sphere);
+        //android.util.Log.d(TAG, "loaded and collider added");
+    }
+
   }
 
   private boolean lastScreenshotLeftFinished = true;
