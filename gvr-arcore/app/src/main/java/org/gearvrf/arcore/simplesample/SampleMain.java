@@ -313,7 +313,9 @@ public class SampleMain extends GVRMain {
 
             if (mDraggingObject == null) {
                 return;
-            } else {
+            } else if (pickInfo != null && pickInfo.motionEvent != null) {
+                // FIXME: Getting NullPointerException sometimes!
+
                 // get the current x,y hit location
                 float hitLocationX = pickInfo.motionEvent.getX();
                 float hitLocationY = pickInfo.motionEvent.getY();
@@ -323,10 +325,10 @@ public class SampleMain extends GVRMain {
                 float diffY = (hitLocationY - mHitY) / 100.0f;
 
                 // when we move along X, calculate an angle to rotate the model around the Y axis
-                float angle = mYaw + (diffX * 2);
+                float angle = mYaw + (diffX / 40.0f);
 
                 // when we move along Y, calculate how much to scale the model
-                float scale = mScale + (diffY);
+                float scale = mScale + (diffY / 2.0f);
                 if(scale < 0.1f) {
                     scale = 0.1f;
                 }
