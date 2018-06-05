@@ -21,12 +21,6 @@ import com.google.ar.core.Pose;
 
 import org.gearvrf.GVRContext;
 
-import java.lang.Math;
-import org.joml.Quaternionf;
-import org.joml.AxisAngle4f;
-import org.joml.Vector3f;
-
-
 /**
  * Represents a ARCore anchor in the scene.
  *
