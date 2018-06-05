@@ -316,6 +316,7 @@ public class SampleMain extends GVRMain {
             } else if (pickInfo != null && pickInfo.motionEvent != null) {
                 // FIXME: Getting NullPointerException sometimes!
 
+
                 // get the current x,y hit location
                 float hitLocationX = pickInfo.motionEvent.getX();
                 float hitLocationY = pickInfo.motionEvent.getY();
@@ -329,6 +330,7 @@ public class SampleMain extends GVRMain {
 
                 // when we move along Y, calculate how much to scale the model
                 float scale = mScale + (diffY / 2.0f);
+
                 if(scale < 0.1f) {
                     scale = 0.1f;
                 }
